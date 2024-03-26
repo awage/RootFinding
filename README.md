@@ -28,3 +28,6 @@ using DrWatson
 @quickactivate "RootFinding"
 ```
 which auto-activate the project and enable local path handling from DrWatson.
+
+All the figures and table to reproduce the results of the article are available in the script directory. 
+
