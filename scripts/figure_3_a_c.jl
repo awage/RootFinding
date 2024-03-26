@@ -24,7 +24,7 @@ function plot_f7_β()
 
     f = Figure(size = (600,500))
 # gb = f[1,1] = GridLayout()
-    ax = Axis(f[1,1], ylabel = L"N_{it}", xlabel = L"\beta", yticklabelsize = 30, xticklabelsize = 30, ylabelsize = 40, xlabelsize = 40,  titlesize = 30 )
+    ax = Axis(f[1,1], ylabel = L"N_{iter}", xlabel = L"\beta", yticklabelsize = 30, xticklabelsize = 30, ylabelsize = 40, xlabelsize = 40,  titlesize = 30 )
     band!(ax, β_range, Nit-stdNit, Nit+stdNit; color = (:lightblue,0.5))
     lines!(ax, β_range, Nit, color = :black)
     s = plotsdir(string("fig_Nit_f", i, ".png"))
@@ -49,11 +49,11 @@ function plot_f7_ε()
     end
 
     f = Figure(size = (600,500))
-    ax = Axis(f[1,1], title = string("convergence f=",i), ylabel = L"N_{it}", xlabel = L"\varepsilon", yticklabelsize = 30, xticklabelsize = 30, ylabelsize = 40, xlabelsize = 40,  titlesize = 30, xscale = log10)
+    ax = Axis(f[1,1],  ylabel = L"N_{iter}", xlabel = L"\varepsilon", yticklabelsize = 30, xticklabelsize = 30, ylabelsize = 40, xlabelsize = 40,  titlesize = 30, xscale = log10)
     lines!(ax, ε_range, m0, color = :black, label = L"\beta = 0")
     lines!(ax, ε_range, m1, color = :red, label = L"\beta = 1")
     s = plotsdir(string("fig_convergence_f", i, ".png"))
-    axislegend(ax);
+    axislegend(ax; labelsize = 30);
     save(plotsdir(s),f)
 end
 

@@ -13,7 +13,7 @@ function plot_benchmark_β_all()
     m0 = zeros(15,length(β_range))
         ff = Figure(size = (600,500))
         ax = Axis(ff[1,1], 
-           ylabel = L"1 - \langle N_{\beta = 1}\rangle /\langle N_{\beta = 0}\rangle", xlabel = L"\beta", yticklabelsize = 30, xticklabelsize = 30, ylabelsize = 40, xlabelsize = 40,  titlesize = 30)
+           ylabel = L"\eta", xlabel = L"\beta", yticklabelsize = 30, xticklabelsize = 30, ylabelsize = 40, xlabelsize = 40,  titlesize = 30)
 
     for i in [1:13; 15]
         f = func_list[i]; 
@@ -37,7 +37,7 @@ function plot_benchmark_ε_all()
     res = 300; 
     ff = Figure(size = (600,500))
     ax = Axis(ff[1,1], 
-    ylabel = L"1 - \langle N_{\beta = 1}\rangle /\langle N_{\beta = 0}\rangle", xlabel = L"f_k", yticklabelsize = 30, xticklabelsize = 20, ylabelsize = 40, xlabelsize = 40,  titlesize = 30, xticks = 1:15 )
+    ylabel = L"\eta", xlabel = L"f_k", yticklabelsize = 30, xticklabelsize = 20, ylabelsize = 40, xlabelsize = 40,  titlesize = 30, xticks = 1:15 )
     mv1 = zeros(15)
     mv0 = zeros(15)
     ev0 = zeros(15)
