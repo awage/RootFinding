@@ -85,3 +85,15 @@ function beta_map_real(f)
     end
     return N_β!
 end
+
+function beta_map_real_ann(f)
+    ∂f∂x(x) = derivative(f,x)
+    N(x) = N_map(x, f, ∂f∂x)
+    function N_β!(dx, x, p, n)
+        β = p[1]
+        Nx = N(x[1])
+        dx[1] = Nx - β(∂f∂x(x[1]))*f(Nx)/∂f∂x(x[1])
+        return
+    end
+    return N_β!
+end

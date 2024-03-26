@@ -3,8 +3,34 @@ using DrWatson
 using LaTeXStrings
 using Statistics
 using JLD2
+using Roots
+using LinearAlgebra:norm
 include("../src/basins_compute.jl")
 include("../src/function_stuff.jl")
+
+function estimate_Nit_real(i, β, Nsim, T, ε)
+    q_conv = zeros(Nsim)
+    x0 = (rand(Nsim) .- 0.5)*2*10
+    Nβ = beta_map_real_ann(func_list[i])
+    # Nβ = beta_map_real(func_list[i])
+    ds = DiscreteDynamicalSystem(Nβ, [0.2], [β])
+    Nit = zeros(Int, Nsim)
+    roots = find_zeros(func_list[i], -10, 10; atol = ε)
+    for n in 1:Nsim
+        # pick random IC:
+        yy,t = trajectory(ds, T, [x0[n]])
+        d = [norm(yy[end][1] - rt) for rt in roots]
+        _,id = findmin(d)
+        v = [norm(yy[k] .- roots[id]) for k in 1:T]
+        indf = findfirst(v .< ε)
+        if !isnothing(indf)
+            Nit[n] = indf
+        end
+    end
+    mean_q = mean(Nit[Nit .> 0])
+    var_q = var(Nit[Nit .> 0])
+    return mean_q,var_q
+end
 
 function beta(j,β; res = 300, ε = 1e-4)
     N_β = beta_map_df(func_list[j]); 
