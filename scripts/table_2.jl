@@ -58,3 +58,5 @@ function estimate_f14()
     @show m1,v1 = estimate_Nit_real(14, βan, Nsim, T, 1e-10)
 end
 
+compute_annealing()
+estimate_f14()
