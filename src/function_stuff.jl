@@ -92,7 +92,7 @@ function beta_map_real_ann(f)
     function N_β!(dx, x, p, n)
         β = p[1]
         Nx = N(x[1])
-        dx[1] = Nx - β(∂f∂x(x[1]))*f(Nx)/∂f∂x(x[1])
+        dx[1] = Nx - β(∂f∂x(x[1]), ∂f∂x(Nx))*f(Nx)/∂f∂x(x[1])
         return
     end
     return N_β!

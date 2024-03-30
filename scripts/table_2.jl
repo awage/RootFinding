@@ -79,14 +79,16 @@ end
 function estimate_f14()
     T = 1500
     Nsim = 300^2
-    β0(x) = 0.; 
-    β1(x) = 1.; 
-    βan(x) = (1 - 1/(1+(0.1*abs(x))^6))
+    β0(x,y) = 0.; 
+    β1(x,y) = 1.; 
+    βan(x,y) = 1 - 1/(1+(0.1*abs(x))^6)
+    βan2(x,y) = 2*x/(x+y)
     @show m0,v0 = estimate_Nit_real(14, β0, Nsim, T, 1e-10)
     @show m1,v1 = estimate_Nit_real(14, β1, Nsim, T, 1e-10)
-    @show m1,v1 = estimate_Nit_real(14, βan, Nsim, T, 1e-10)
+    @show m2,v2 = estimate_Nit_real(14, βan, Nsim, T, 1e-10)
+    @show m3,v3 = estimate_Nit_real(14, βan2, Nsim, T, 1e-10)
 end
 
 
-compute_annealing()
-# estimate_f14()
+# compute_annealing()
+estimate_f14()
