@@ -33,7 +33,7 @@ function estimate_Nit_real(i, β, Nsim, T, ε)
 end
 
 function beta(j,β; res = 300, ε = 1e-4)
-    N_β = beta_map_df(func_list[j]); 
+    N_β = beta_map_anneal(func_list[j]); 
     d = @dict(N_β, β, res, ε) # parametros
     d1 = compute_basins_prox(d)
     @unpack grid, basins, iterations, attractors = d1
@@ -49,6 +49,7 @@ function compute_annealing()
     beta_it_0 = zeros(15)
     beta_it_1 = zeros(15)
     beta_it_an = zeros(15)
+    beta_it_an2 = zeros(15)
     for n in 1:15
         print(string_list[n], " & ")
         # for (k,β) in enumerate(beta_range)
@@ -61,15 +62,17 @@ function compute_annealing()
             beta_it_1[n] = m2
             print(round(m2,digits =1) , " & ")
             β3(x,y) =  (1 - 1/(1+(0.1*abs(x))^6))
-            # β3(x,y) =  abs(x) < 1e-2 ? 0 : 1
             m3, f3 = beta(n,β3;ε); 
-            beta_it_an[n] = m3
-            print(round(m3,digits =1))
+            print(round(m3,digits =1), " & ")
+            β4(x,y) =  2*x/(x+y)
+            m4, f4 = beta(n,β4;ε); 
+            beta_it_an2[n] = m4
+            print(round(m4,digits =1))
         # end
         println(" \\\\")
         println("\\hline")
     end
-    @save "newton_annealing.jld2" beta_it_0 beta_it_1 beta_it_an
+    @save "newton_annealing.jld2" beta_it_0 beta_it_1 beta_it_an beta_it_an2
 end
 
 
@@ -84,5 +87,6 @@ function estimate_f14()
     @show m1,v1 = estimate_Nit_real(14, βan, Nsim, T, 1e-10)
 end
 
+
 compute_annealing()
-estimate_f14()
+# estimate_f14()

@@ -61,14 +61,14 @@ function beta_map(f)
 end
 
 
-function beta_map_df(f)
+function beta_map_anneal(f)
     ∂f∂z = ∂f(f)
     N(z) = N_map(z, f, ∂f∂z)
     function N_β(z1, p, n)
         β = p[1]
         z = z1[1] + im * z1[2]
         N_z = N(z)
-        z_new =  N_z - β(∂f∂z(z), N_z - z) * f(N_z)/∂f∂z(z)
+        z_new =  N_z - β(∂f∂z(z), ∂f∂z(N_z)) * f(N_z)/∂f∂z(z)
         return SVector(real(z_new), imag(z_new))
     end
     return N_β
