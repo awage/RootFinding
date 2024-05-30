@@ -2,7 +2,7 @@ using DrWatson
 @quickactivate
 using CairoMakie
 using LaTeXStrings
-using Statistics:mean
+using Statistics
 include("../src/function_stuff.jl")
 include("../src/basins_compute.jl")
 
@@ -11,9 +11,9 @@ function plot_benchmark_β_all()
     β_range = range(0,1, step  = 0.05)
     res = 300; ε = 1.e-8 
     m0 = zeros(15,length(β_range))
-        ff = Figure(size = (600,500))
-        ax = Axis(ff[1,1], 
-           ylabel = L"\eta", xlabel = L"\beta", yticklabelsize = 30, xticklabelsize = 30, ylabelsize = 40, xlabelsize = 40,  titlesize = 30)
+    ff = Figure(size = (600,500))
+    ax = Axis(ff[1,1], 
+    ylabel = L"\eta", xlabel = L"\beta", yticklabelsize = 30, xticklabelsize = 30, ylabelsize = 40, xlabelsize = 40,  titlesize = 30)
 
     for i in [1:13; 15]
         f = func_list[i]; 
@@ -27,9 +27,9 @@ function plot_benchmark_β_all()
         clr = mit > 1 ? :lightsalmon : :lightgreen
         lines!(ax, β_range, 1 .- m0[i,:]./m0[i,1], color = clr)
     end
-        s = plotsdir("fig_bench_com_β_all.pdf")
-        ylims!(ax, -1.5,0.5)
-        save(plotsdir(s),ff)
+    s = plotsdir("fig_bench_com_β_all.pdf")
+    ylims!(ax, -1.5,0.5)
+    save(plotsdir(s),ff)
 end
 
 

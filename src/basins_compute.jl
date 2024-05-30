@@ -1,4 +1,5 @@
 using Attractors
+using LinearAlgebra:norm
 
 """ 
     function _get_dat(f,β,i,res,ε) -> data
@@ -15,10 +16,25 @@ function _get_dat(f,β,i,res,ε)
         d, # container for parameter
         compute_basins_prox, # function
         prefix = string("basins_prox_",i), # prefix for savename
-        force = false, # true for forcing sims
+        force = true, # true for forcing sims
         wsave_kwargs = (;compress = true)
     )
     return data
+end
+
+function _get_iterations!(ds, ε)
+    xn_1 = get_state(ds) 
+    step!(ds)
+    xn = get_state(ds) 
+    k = 1
+    while norm(xn - xn_1) > ε
+        (k > 1000) && break 
+        xn_1 = xn
+        step!(ds)
+        xn = get_state(ds) 
+        k += 1
+    end
+    return k
 end
 
 
@@ -65,7 +81,9 @@ function compute_basins_prox(d)
     
     for (i,x) in enumerate(xg), (j,y) in enumerate(yg) 
         l = mapper_prox([x,y])
-        n = mapper_prox.ds.t
+        # n = mapper_prox.ds.t
+        set_state!(ds, [x,y])
+        n = _get_iterations!(ds,ε)
         basins[i,j] = l
         iterations[i,j] = n
     end
