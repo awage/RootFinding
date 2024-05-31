@@ -16,7 +16,7 @@ function _get_dat(f,β,i,res,ε)
         d, # container for parameter
         compute_basins_prox, # function
         prefix = string("basins_prox_",i), # prefix for savename
-        force = true, # true for forcing sims
+        force = false, # true for forcing sims
         wsave_kwargs = (;compress = true)
     )
     return data
@@ -27,8 +27,9 @@ function _get_iterations!(ds, ε)
     step!(ds)
     xn = get_state(ds) 
     k = 1
+    # stopping criterion is ∥x_n - x_{n-1}∥ ≤ ε
     while norm(xn - xn_1) > ε
-        (k > 1000) && break 
+        (k > 50) && break 
         xn_1 = xn
         step!(ds)
         xn = get_state(ds) 
@@ -69,7 +70,8 @@ function compute_basins_prox(d)
     for _ in 1:1000; mapper_beta(sampler());  end
     attractors = extract_attractors(mapper_beta)
         
-    basins = zeros(Int8, res,res); iterations = zeros(Int32,res,res)
+    basins = zeros(Int8, res,res); iterations = zeros(Int16,res,res)
+    exec_time = zeros(res,res)
     # if there is not enough attractors return empty matrix
     if length(attractors) < 2
         Sb = Sbb = fdim = 0.
@@ -83,14 +85,15 @@ function compute_basins_prox(d)
         l = mapper_prox([x,y])
         # n = mapper_prox.ds.t
         set_state!(ds, [x,y])
-        n = _get_iterations!(ds,ε)
+        n = @timed _get_iterations!(ds,ε)
         basins[i,j] = l
-        iterations[i,j] = n
+        iterations[i,j] = n.value
+    exec_time[i,j] = n.time
     end
 
     Sb, Sbb = basin_entropy(basins) 
     _,_,fdim = basins_fractal_dimension(basins)
-    return @strdict(β, grid, basins, iterations, attractors, Sb, Sbb, fdim)
+    return @strdict(β, grid, basins, iterations, exec_time, attractors, Sb, Sbb, fdim)
 end
 
 
