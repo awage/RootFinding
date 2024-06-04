@@ -5,34 +5,9 @@ using LaTeXStrings
 using Statistics
 using Roots
 using LinearAlgebra:norm
-include("../src/function_stuff.jl")
-include("../src/basins_compute.jl")
-
-function _estimate_ACOC!(ds,Nsim)
-    q_conv = zeros(Nsim)
-    for n in 1:Nsim
-        # pick random attractor: 
-        rt = rand(roots)
-        if !(i == 5 && rt ≈ -1.5)
-            yy,t = trajectory(ds, T, [rt .+ randn()*0.2])
-            v = [norm(yy[k] .- rt) for k in 1:T]
-            indf = findfirst(v .< ε) 
-            if !isnothing(indf) && indf > 3
-                q = Vector{Float64}()
-                for k in 3:(indf-1)
-                    num = log(norm(yy[k+1] - yy[k])/norm(yy[k] - yy[k-1])) 
-                    den = log(norm(yy[k] - yy[k-1])/norm(yy[k-1] - yy[k-2]))
-                    qe = num/den
-                    push!(q,qe)
-                end
-                q_conv[n,m] = q[end]
-            end
-        else 
-            n -= 1 # back a step
-        end
-    end
-    return q_conv
-end
+include(srcdir("function_stuff.jl"))
+include(srcdir("basins_compute.jl"))
+include(srcdir("estimate_order.jl"))
 
 function estimate_q_real(i, β_vec, Nsim, T, ε) 
     q_conv = zeros(Nsim,length(β_vec))
@@ -43,7 +18,7 @@ function estimate_q_real(i, β_vec, Nsim, T, ε)
         @show β
         Nβ! = beta_map_real(func_list[i])
         ds = DiscreteDynamicalSystem(Nβ!, [0.2], [β])
-        q_conv[:,m] = _estimate_ACOC!(ds,Nsim)
+        q_conv[:,m] = _estimate_ACOC!(ds,Nsim,roots)
         ind = findall( 0 .< q_conv[:,m] .< 10)
         mean_q[m] = mean(q_conv[ind,m])
         var_q[m] = var(q_conv[ind,m])
@@ -61,7 +36,7 @@ function estimate_q_cmplx(i, β_vec, Nsim, T, ε = 1e-5)
         @unpack basins, attractors, grid = data0
         Nβ = beta_map(func_list[i])
         ds = DiscreteDynamicalSystem(Nβ, [0.1, 0.2], [β])
-        q_conv[:,m] = _estimate_ACOC!(ds,Nsim)
+        q_conv[:,m] = _estimate_ACOC!(ds,Nsim,attractors)
         ind = findall( 0 .< q_conv[:,m] .< 10)
         mean_q[m] = mean(q_conv[ind,m])
         var_q[m] = var(q_conv[ind,m])
