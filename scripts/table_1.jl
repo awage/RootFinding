@@ -18,7 +18,7 @@ function estimate_q_real(i, β_vec, Nsim, T, ε)
         @show β
         Nβ! = beta_map_real(func_list[i])
         ds = DiscreteDynamicalSystem(Nβ!, [0.2], [β])
-        q_conv[:,m] = _estimate_ACOC!(ds,Nsim,roots)
+        q_conv[:,m] = _estimate_ACOC!(ds, Nsim, T, ε, roots)
         ind = findall( 0 .< q_conv[:,m] .< 10)
         mean_q[m] = mean(q_conv[ind,m])
         var_q[m] = var(q_conv[ind,m])
@@ -36,7 +36,8 @@ function estimate_q_cmplx(i, β_vec, Nsim, T, ε = 1e-5)
         @unpack basins, attractors, grid = data0
         Nβ = beta_map(func_list[i])
         ds = DiscreteDynamicalSystem(Nβ, [0.1, 0.2], [β])
-        q_conv[:,m] = _estimate_ACOC!(ds,Nsim,attractors)
+        roots = [attractors[kk][1] for kk in 1:length(attractors)]
+        q_conv[:,m] = _estimate_ACOC!(ds, Nsim, T, ε, roots)
         ind = findall( 0 .< q_conv[:,m] .< 10)
         mean_q[m] = mean(q_conv[ind,m])
         var_q[m] = var(q_conv[ind,m])
@@ -45,7 +46,7 @@ function estimate_q_cmplx(i, β_vec, Nsim, T, ε = 1e-5)
 end
 
 # Estimation of convergence order in the complex plane: 
-function get_order_functions_cmplx()
+function print_order_functions_cmplx()
     Nsim = 5000
     T = 1000
     β_vec = [0., 1.]
@@ -59,7 +60,6 @@ function get_order_functions_cmplx()
         println("function ", k, " | ", round(m[k,1], digits =2), " ±", round(v[k,1],digits =2), " | ", round(m[k,2], digits =2), " ±", round(sqrt(v[k,2]), digits =2))
     end
 end
-
 
 # Estimation of convergence order on the real line: 
 function get_order_functions_real()
@@ -80,5 +80,5 @@ function get_order_functions_real()
 end
 
 
-# get_order_functions_cmplx()
-get_order_functions_real()
+get_order_functions_cmplx()
+# get_order_functions_real()

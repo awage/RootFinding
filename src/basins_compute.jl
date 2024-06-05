@@ -2,13 +2,13 @@ using Attractors
 using LinearAlgebra:norm
 
 """ 
-    function _get_dat(f,β,i,res,ε) -> data
+    function _get_basins(f,β,i,res,ε) -> data
 
 Convenience function to compute and store the basins
 and attractors of the funcion i. with the proximity algorithm
 
 """
-function _get_dat(f,β,i,res,ε)
+function _get_basins(f,β,i,res,ε)
     N_β = beta_map(f)
     d = @dict(N_β, β, res, ε) # parametros
     data, file = produce_or_load(
