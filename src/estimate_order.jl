@@ -11,12 +11,17 @@ function get_ACOC(roots, Nsim, i, β, T, ε)
     )
     @unpack q_conv = data
     ind = findall( 0 .< q_conv .< 10)
-    return mean(q_conv), var(q_conv)
+    return mean(q_conv[ind]), var(q_conv[ind])
 end
 
 function _estimate_ACOC(d)
     @unpack Nβ, β, Nsim, roots, ε, T = d
     ds = DiscreteDynamicalSystem(Nβ, [0.1, 0.2], [β])
+    q_conv = _estimate_ACOC!(ds, Nsim, T, ε, roots)
+    return @strdict(q_conv)
+end
+
+function  _estimate_ACOC!(ds, Nsim, T, ε, roots)
     q_conv = zeros(Nsim)
     for n in 1:Nsim
         # pick random roots: 
@@ -36,6 +41,6 @@ function _estimate_ACOC(d)
             q_conv[n] = q[end]
         end
     end
-    return @strdict(q_conv)
+    return q_conv
 end
 

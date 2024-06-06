@@ -32,7 +32,7 @@ function estimate_q_cmplx(i, β_vec, Nsim, T, ε = 1e-5)
     var_q = zeros(length(β_vec))
     for (m,β) in enumerate(β_vec)
         @show β
-        data0 = _get_dat(func_list[i], β, i, 100, ε)
+        data0 = _get_basins(func_list[i], β, i, 100, ε)
         @unpack basins, attractors, grid = data0
         Nβ = beta_map(func_list[i])
         ds = DiscreteDynamicalSystem(Nβ, [0.1, 0.2], [β])
@@ -80,5 +80,5 @@ function get_order_functions_real()
 end
 
 
-get_order_functions_cmplx()
+print_order_functions_cmplx()
 # get_order_functions_real()
