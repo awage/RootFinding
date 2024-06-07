@@ -2,15 +2,15 @@ using Attractors
 using LinearAlgebra:norm
 
 """ 
-    function _get_basins(f,β,i,res,ε) -> data
+    function _get_basins(f,β,i,res,ε,max_it) -> data
 
 Convenience function to compute and store the basins
 and attractors of the funcion i. with the proximity algorithm
 
 """
-function _get_basins(f,β,i,res,ε)
+function _get_basins(f,β,i,res,ε,max_it)
     N_β = beta_map(f)
-    d = @dict(N_β, β, res, ε) # parametros
+    d = @dict(N_β, β, res, ε, max_it) # parametros
     data, file = produce_or_load(
         datadir(""), # path
         d, # container for parameter
@@ -64,15 +64,7 @@ function compute_basins_prox(d)
 
     basins = zeros(Int8, res,res); iterations = zeros(Int16,res,res)
     exec_time = zeros(res,res)
-    # if there is not enough attractors return empty matrix
-    # if length(attractors) < 2
-    #     Sb = Sbb = fdim = 0.
-    #     return @strdict(β, grid, basins, iterations, attractors, Sb, Sbb, fdim)
-    # end
 
-    # Proceed to compute the basins and the iterations.
-    # mapper_prox = AttractorsViaProximity(ds, attractors, ε; Ttr = 0, horizon_limit = 1e50, consecutive_lost_steps = 10000) 
-    
     for (i,x) in enumerate(xg), (j,y) in enumerate(yg) 
         set_state!(ds, [x,y])
         n = @timed _get_iterations!(ds,ε,max_it)
@@ -87,8 +79,46 @@ function compute_basins_prox(d)
 
     Sb, Sbb = basin_entropy(basins) 
     _,_,fdim = basins_fractal_dimension(basins)
-    return @strdict(β, grid, basins, iterations, exec_time, attractors, Sb, Sbb, fdim)
+    attractors = extract_attractors(mapper_beta)
+     
+     # make sure we pick an IC that converge to a root
+     # with enough iterations (at least 8). 
+     x = 0.; y = 0.
+     while true 
+         x = 4*(rand()-0.5)
+         y = 4*(rand()-0.5)
+         set_state!(ds, [x,y])
+         n = _get_iterations!(ds,ε,max_it)
+         ((n > max_it) || (n < 8)) || break
+     end
+    @show q = tmp_estimate_ACOC!(ds, 200,ε, x, y)
+    
+
+    return @strdict(β, grid, basins, iterations, exec_time, attractors, Sb, Sbb, fdim, q)
 end
 
 
 
+
+# Estimate order
+function  tmp_estimate_ACOC!(ds, T, ε, x, y)
+    # yy,t = trajectory(ds, T, [BigFloat(x;precision =128) ,BigFloat(y; precision = 128)])
+    yy,t = trajectory(ds, T, [x,y])
+    # @show typeof(yy)
+    qn_1 = 10000
+    qn = qn_1 - 1
+    k = 3
+    # while norm(qn - qn_1) > ε && norm(yy[k+1] - yy[k]) > ε
+    while norm(yy[k+1] - yy[k]) > ε
+        (k > T-2) && break 
+        num = log(norm(yy[k+1] - yy[k])) - log(norm(yy[k] - yy[k-1])) 
+        den = log(norm(yy[k] - yy[k-1]))- log(norm(yy[k-1] - yy[k-2]))
+        # num = log(norm(yy[k+1] - root)/norm(yy[k] - root)) 
+        # den = log(norm(yy[k] - root)/norm(yy[k-1] - root))
+        qn_1 = qn
+        qn = num/den
+        k = k + 1 
+    end
+    # @show norm(yy[k+1] - yy[k]), k
+    return qn
+end

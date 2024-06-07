@@ -10,7 +10,7 @@ include(srcdir("estimate_order.jl"))
 
 function print_table_all()
     β_range = range(-1,1, step  = 0.5)
-    res = 300; ε = 1.e-8; Nsim = 1000; T = 1000
+    res = 1000; ε = 1.e-15; Nsim = 1000; T = 1000
     max_it = 50
     mit= zeros(15,length(β_range))
     t0 = zeros(15,length(β_range))
@@ -24,10 +24,9 @@ function print_table_all()
     for i in [1:13; 15]
         println("|funct: ", i, " |  IT  | EX μs| NC %  | OR |")
         for (k,β) in enumerate(β_range)
-            data0 = _get_basins(func_list[i], β, i, res, ε)
-            @unpack attractors,iterations,basins,exec_time = data0
+            data0 = _get_basins(func_list[i], β, i, res, ε, max_it)
+            @unpack q, attractors,iterations,basins, Sb, Sbb, exec_time = data0
             roots = [attractors[kk][1] for kk in 1:length(attractors)]
-            q, qv = get_ACOC(roots, 5000, i, β, 1000, 1e-15)
             ind = findall(basins .!= -1)
             mit = mean(iterations[ind])
             t0 = mean(exec_time[ind])
@@ -41,8 +40,9 @@ function print_table_all()
                 " | ", round(nc*100, digits =2),
                 " | ", round(t0*1e6, digits =2), 
                 " | ", round(ps*1e-6, digits =2),
-                " | ", round(its*1e-6, digits =2))
-
+                " | ", round(its*1e-6, digits =2),
+                " | ", round(Sb, digits =2),
+                " | ", round(Sbb, digits =2))
         end
     end
 end
