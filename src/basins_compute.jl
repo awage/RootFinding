@@ -22,14 +22,14 @@ function _get_basins(f,β,i,res,ε)
     return data
 end
 
-function _get_iterations!(ds, ε)
+function _get_iterations!(ds, ε, max_it)
     xn_1 = get_state(ds) 
     step!(ds)
     xn = get_state(ds) 
     k = 1
     # stopping criterion is ∥x_n - x_{n-1}∥ ≤ ε
     while norm(xn - xn_1) > ε
-        (k > 50) && break 
+        (k > max_it) && break 
         xn_1 = xn
         step!(ds)
         xn = get_state(ds) 
@@ -51,44 +51,38 @@ The basins, the iteration matrix, the metrics and the attractors
 are returned into a name dictionnary. 
 """
 function compute_basins_prox(d)
-    @unpack N_β, β, res, ε = d
+    @unpack N_β, β, res, ε, max_it = d
     ds = DiscreteDynamicalSystem(N_β, [0.1, 0.2], [β])
     # Use non-sparse for using `basins_of_attraction`
-    xg = yg = range(-10, 10; length = 5000)
+    xg = yg = range(-10, 10; length = 10000)
     grid = (xg, yg)
-    region = HRectangle(minimum.(grid),maximum.(grid))
-    sampler, = statespace_sampler(region, 1234)
     mapper_beta = AttractorsViaRecurrences(ds, (xg, yg);
             sparse = true, consecutive_recurrences = 3000
     )
     xg = yg = range(-2, 2; length = res)
     grid = (xg, yg)
-    region = HRectangle(minimum.(grid),maximum.(grid))
-    sampler, = statespace_sampler(region, 1234)
 
-    # get attractors
-    for _ in 1:1000; mapper_beta(sampler());  end
-    attractors = extract_attractors(mapper_beta)
-        
     basins = zeros(Int8, res,res); iterations = zeros(Int16,res,res)
     exec_time = zeros(res,res)
     # if there is not enough attractors return empty matrix
-    if length(attractors) < 2
-        Sb = Sbb = fdim = 0.
-        return @strdict(β, grid, basins, iterations, attractors, Sb, Sbb, fdim)
-    end
+    # if length(attractors) < 2
+    #     Sb = Sbb = fdim = 0.
+    #     return @strdict(β, grid, basins, iterations, attractors, Sb, Sbb, fdim)
+    # end
 
     # Proceed to compute the basins and the iterations.
-    mapper_prox = AttractorsViaProximity(ds, attractors, ε; Ttr = 0, horizon_limit = 1e50, consecutive_lost_steps = 10000) 
+    # mapper_prox = AttractorsViaProximity(ds, attractors, ε; Ttr = 0, horizon_limit = 1e50, consecutive_lost_steps = 10000) 
     
     for (i,x) in enumerate(xg), (j,y) in enumerate(yg) 
-        l = mapper_prox([x,y])
-        # n = mapper_prox.ds.t
         set_state!(ds, [x,y])
-        n = @timed _get_iterations!(ds,ε)
-        basins[i,j] = l
+        n = @timed _get_iterations!(ds,ε,max_it)
+        if n.value > max_it
+            basins[i,j] = -1
+        else
+            basins[i,j] = mapper_beta([x,y])
+        end
         iterations[i,j] = n.value
-    exec_time[i,j] = n.time
+        exec_time[i,j] = n.time
     end
 
     Sb, Sbb = basin_entropy(basins) 
