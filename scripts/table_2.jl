@@ -8,6 +8,20 @@ using LinearAlgebra:norm
 include("../src/basins_compute.jl")
 include("../src/function_stuff.jl")
 
+
+function estimate_f14()
+    T = 1500
+    Nsim = 300^2
+    β0(x,y) = 0.; 
+    β1(x,y) = 1.; 
+    βan(x,y) = 1 - 1/(1+(0.1*abs(x))^6)
+    βan2(x,y) = 2*x/(x+y)
+    @show m0,v0 = estimate_Nit_real(14, β0, Nsim, T, 1e-10)
+    @show m1,v1 = estimate_Nit_real(14, β1, Nsim, T, 1e-10)
+    @show m2,v2 = estimate_Nit_real(14, βan, Nsim, T, 1e-10)
+    @show m3,v3 = estimate_Nit_real(14, βan2, Nsim, T, 1e-10)
+end
+
 function estimate_Nit_real(i, β, Nsim, T, ε)
     q_conv = zeros(Nsim)
     x0 = (rand(Nsim) .- 0.5)*2*10
@@ -32,9 +46,9 @@ function estimate_Nit_real(i, β, Nsim, T, ε)
     return mean_q,var_q
 end
 
-function beta(j,β; res = 300, ε = 1e-4)
+function beta(j,β; res = 500, ε = 1e-4, max_it = 50)
     N_β = beta_map_anneal(func_list[j]); 
-    d = @dict(N_β, β, res, ε) # parametros
+    d = @dict(N_β, β, res, ε, max_it) # parametros
     d1 = compute_basins_prox(d)
     @unpack grid, basins, iterations, attractors = d1
     ind = findall(basins .>= 1)
@@ -45,50 +59,50 @@ function beta(j,β; res = 300, ε = 1e-4)
 end
 
 function compute_annealing()
-    ε = 1e-10
+    ε = 1e-15
     beta_it_0 = zeros(15)
     beta_it_1 = zeros(15)
     beta_it_an = zeros(15)
     beta_it_an2 = zeros(15)
     for n in 1:15
-        print(string_list[n], " & ")
+        # print(string_list[n], " & ")
         # for (k,β) in enumerate(beta_range)
             β0(x,y) = 0. 
             m2, f2 = beta(n,β0;ε); 
             beta_it_0[n] = m2
-            print(round(m2,digits =1) , " & ")
+            # print(round(m2,digits =1) , " & ")
             β1(x,y) = 1.
             m2, f2 = beta(n,β1;ε); 
             beta_it_1[n] = m2
-            print(round(m2,digits =1) , " & ")
+            # print(round(m2,digits =1) , " & ")
             β3(x,y) =  (1 - 1/(1+(0.1*abs(x))^6))
             m3, f3 = beta(n,β3;ε); 
-            print(round(m3,digits =1), " & ")
+            beta_it_an[n] = m3
+            # print(round(m3,digits =1), " & ")
             β4(x,y) =  2*x/(x+y)
             m4, f4 = beta(n,β4;ε); 
             beta_it_an2[n] = m4
-            print(round(m4,digits =1))
+            # print(round(m4,digits =1))
         # end
-        println(" \\\\")
-        println("\\hline")
+        # println(" \\\\")
+        # println("\\hline")
     end
     @save "newton_annealing.jld2" beta_it_0 beta_it_1 beta_it_an beta_it_an2
 end
 
 
-function estimate_f14()
-    T = 1500
-    Nsim = 300^2
-    β0(x,y) = 0.; 
-    β1(x,y) = 1.; 
-    βan(x,y) = 1 - 1/(1+(0.1*abs(x))^6)
-    βan2(x,y) = 2*x/(x+y)
-    @show m0,v0 = estimate_Nit_real(14, β0, Nsim, T, 1e-10)
-    @show m1,v1 = estimate_Nit_real(14, β1, Nsim, T, 1e-10)
-    @show m2,v2 = estimate_Nit_real(14, βan, Nsim, T, 1e-10)
-    @show m3,v3 = estimate_Nit_real(14, βan2, Nsim, T, 1e-10)
+function print_table()
+    @load  "newton_annealing.jld2" beta_it_0 beta_it_1 beta_it_an beta_it_an2
+    for n in 1:15
+        print(string_list[n], " & ")
+        print(round(beta_it_0[n],digits =1) , " & ")
+        print(round(beta_it_1[n],digits =1) , " & ")
+        # print(round(beta_it_an[n],digits =1), " & ")
+        print(round(beta_it_an2[n],digits =1))
+        println(" \\\\")
+        println("\\hline")
+    end
 end
 
-
 # compute_annealing()
-estimate_f14()
+print_table()

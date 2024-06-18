@@ -1,6 +1,6 @@
 using Attractors
 using LinearAlgebra:norm
-
+using ProgressMeter
 """ 
     function _get_basins(f,β,i,res,ε,max_it) -> data
 
@@ -65,7 +65,7 @@ function compute_basins_prox(d)
     basins = zeros(Int8, res,res); iterations = zeros(Int16,res,res)
     exec_time = zeros(res,res)
 
-    for (i,x) in enumerate(xg), (j,y) in enumerate(yg) 
+@showprogress    for (i,x) in enumerate(xg), (j,y) in enumerate(yg) 
         set_state!(ds, [x,y])
         n = @timed _get_iterations!(ds,ε,max_it)
         if n.value > max_it
@@ -83,13 +83,15 @@ function compute_basins_prox(d)
      
      # make sure we pick an IC that converge to a root
      # with enough iterations (at least 8). 
-     x = 0.; y = 0.
+     x = 0.; y = 0.; k = 0
      while true 
          x = 4*(rand()-0.5)
          y = 4*(rand()-0.5)
          set_state!(ds, [x,y])
          n = _get_iterations!(ds,ε,max_it)
          ((n > max_it) || (n < 8)) || break
+         (k > 1000) || break
+         @show k = k + 1
      end
     @show q = tmp_estimate_ACOC!(ds, 200,ε, x, y)
     

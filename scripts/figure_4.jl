@@ -8,8 +8,8 @@ include("../src/color_stuff.jl")
 include("../src/basins_compute.jl")
 
 
-function plot_basins(f,β,i,res, ε = 1e-4; shaded = true, show_attractors = false)
-    data = _get_dat(f, β, i, res, ε)
+function plot_basins(f,β,i,res, ε = 1e-15, max_it =50; shaded = true, show_attractors = false)
+    data = _get_basins(f, β, i, res, ε,max_it)
     @unpack basins, iterations, attractors, grid = data
     @show bas_num = unique(basins)
 
@@ -31,14 +31,14 @@ for i in f_list, β in β_range
 end
 
 # Plot metrics as a function of β
-β_range = range(0.0,1,step = 0.1)
-res = 300; ε = 1e-4
+β_range = range(-1.,1,step = 0.1)
+res = 500; ε = 1e-15; max_it = 50
 for i in f_list
     Sb_v = zeros(length(β_range))
     Sbb_v = zeros(length(β_range))
     fdim_v = zeros(length(β_range))
     for (k,β) in enumerate(β_range)
-        data = _get_dat(func_list[i], β, i, res, ε)
+        data = _get_basins(func_list[i], β, i, res, ε,max_it)
         @unpack iterations, Sb, Sbb, fdim = data
         Sb_v[k],Sbb_v[k],fdim_v[k] = Sb, Sbb, fdim
     end

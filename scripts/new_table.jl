@@ -1,5 +1,6 @@
 using DrWatson
 @quickactivate
+using CodecZlib
 using CairoMakie
 using LaTeXStrings
 using Statistics
@@ -21,7 +22,7 @@ function print_table_all()
     ff = Figure(size = (600,500))
     ax = Axis(ff[1,1], 
     ylabel = L"\eta", xlabel = L"\beta", yticklabelsize = 30, xticklabelsize = 30, ylabelsize = 40, xlabelsize = 40,  titlesize = 30)
-    for i in [1:13; 15]
+    for i in  [1:13; 15; 17]
         println("Function f",i, "=", string_list[i] )
         println(" ")
         println("\\begin{tabular}{l|l|l|l|l|l|l|l|l}")

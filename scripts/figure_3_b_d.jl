@@ -9,7 +9,7 @@ include("../src/basins_compute.jl")
 
 function plot_benchmark_β_all()
     β_range = range(0,1, step  = 0.05)
-    res = 300; ε = 1.e-8 
+    res = 300; ε = 1.e-15; max_it = 50 
     m0 = zeros(15,length(β_range))
     ff = Figure(size = (600,500))
     ax = Axis(ff[1,1], 
@@ -18,7 +18,7 @@ function plot_benchmark_β_all()
     for i in [1:13; 15]
         f = func_list[i]; 
         for (k,β) in enumerate(β_range)
-            data0 = _get_dat(f, β, i, res, ε)
+            data0 = _get_basins(f, β, i, res, ε, max_it)
             @unpack iterations,basins = data0
             ind = findall(basins .!= -1)
             m0[i,k] = mean(iterations[ind])
@@ -42,11 +42,11 @@ function plot_benchmark_ε_all()
     mv0 = zeros(15)
     ev0 = zeros(15)
     ev1 = zeros(15)
-    ε = 1e-9
+    ε = 1e-15; max_it = 50
     for i in [1:13 ; 15]
         f = func_list[i]; 
-        data0 = _get_dat(f, 0, i, res, ε)
-        data1 = _get_dat(f, 1, i, res, ε)
+        data0 = _get_basins(f, 0, i, res, ε, max_it)
+        data1 = _get_basins(f, 1, i, res, ε, max_it)
         @unpack iterations,basins = data0
         ind = findall(basins .!= -1)
         m0 = mean(iterations[ind])
