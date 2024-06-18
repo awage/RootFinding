@@ -2,20 +2,20 @@ using Attractors
 using LinearAlgebra:norm
 using ProgressMeter
 """ 
-    function _get_basins(f,β,i,res,ε,max_it) -> data
+    function _get_basins(N_β,β,i,res,ε,max_it) -> data
 
 Convenience function to compute and store the basins
 and attractors of the funcion i. with the proximity algorithm
 
 """
-function _get_basins(f,β,i,res,ε,max_it)
-    N_β = beta_map(f)
+function _get_basins(N_β,β,i,res,ε,max_it; prefix = string("basins_prox_", i))
+    # N_β = beta_map(f)
     d = @dict(N_β, β, res, ε, max_it) # parametros
     data, file = produce_or_load(
         datadir(""), # path
         d, # container for parameter
         compute_basins_prox, # function
-        prefix = string("basins_prox_",i), # prefix for savename
+        prefix = prefix, # prefix for savename
         force = false, # true for forcing sims
         wsave_kwargs = (;compress = true)
     )
@@ -93,7 +93,7 @@ function compute_basins_prox(d)
          (k > 1000) || break
          @show k = k + 1
      end
-    @show q = tmp_estimate_ACOC!(ds, 200,ε, x, y)
+    @show q = _estimate_ACOC!(ds, 200,ε, x, y)
     
 
     return @strdict(β, grid, basins, iterations, exec_time, attractors, Sb, Sbb, fdim, q)
@@ -103,7 +103,7 @@ end
 
 
 # Estimate order
-function  tmp_estimate_ACOC!(ds, T, ε, x, y)
+function  _estimate_ACOC!(ds, T, ε, x, y)
     # yy,t = trajectory(ds, T, [BigFloat(x;precision =128) ,BigFloat(y; precision = 128)])
     yy,t = trajectory(ds, T, [x,y])
     # @show typeof(yy)

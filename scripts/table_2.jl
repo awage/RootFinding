@@ -5,46 +5,9 @@ using Statistics
 using JLD2
 using Roots
 using LinearAlgebra:norm
-include("../src/basins_compute.jl")
-include("../src/function_stuff.jl")
+include(srcdir("function_stuff.jl"))
+include(srcdir("basins_compute.jl"))
 
-
-function estimate_f14()
-    T = 1500
-    Nsim = 300^2
-    β0(x,y) = 0.; 
-    β1(x,y) = 1.; 
-    βan(x,y) = 1 - 1/(1+(0.1*abs(x))^6)
-    βan2(x,y) = 2*x/(x+y)
-    @show m0,v0 = estimate_Nit_real(14, β0, Nsim, T, 1e-10)
-    @show m1,v1 = estimate_Nit_real(14, β1, Nsim, T, 1e-10)
-    @show m2,v2 = estimate_Nit_real(14, βan, Nsim, T, 1e-10)
-    @show m3,v3 = estimate_Nit_real(14, βan2, Nsim, T, 1e-10)
-end
-
-function estimate_Nit_real(i, β, Nsim, T, ε)
-    q_conv = zeros(Nsim)
-    x0 = (rand(Nsim) .- 0.5)*2*10
-    Nβ = beta_map_real_ann(func_list[i])
-    # Nβ = beta_map_real(func_list[i])
-    ds = DiscreteDynamicalSystem(Nβ, [0.2], [β])
-    Nit = zeros(Int, Nsim)
-    roots = find_zeros(func_list[i], -10, 10; atol = ε)
-    for n in 1:Nsim
-        # pick random IC:
-        yy,t = trajectory(ds, T, [x0[n]])
-        d = [norm(yy[end][1] - rt) for rt in roots]
-        _,id = findmin(d)
-        v = [norm(yy[k] .- roots[id]) for k in 1:T]
-        indf = findfirst(v .< ε)
-        if !isnothing(indf)
-            Nit[n] = indf
-        end
-    end
-    mean_q = mean(Nit[Nit .> 0])
-    var_q = var(Nit[Nit .> 0])
-    return mean_q,var_q
-end
 
 function beta(j,β; res = 500, ε = 1e-4, max_it = 50)
     N_β = beta_map_anneal(func_list[j]); 
