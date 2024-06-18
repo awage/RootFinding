@@ -32,7 +32,7 @@ end
 
 # Plot metrics as a function of β
 β_range = range(-1.,1,step = 0.1)
-res = 500; ε = 1e-15; max_it = 50
+res = 1000; ε = 1e-15; max_it = 50
 for i in f_list
     Sb_v = zeros(length(β_range))
     Sbb_v = zeros(length(β_range))

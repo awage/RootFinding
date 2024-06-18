@@ -1,6 +1,7 @@
 using Attractors
 using LinearAlgebra:norm
 using ProgressMeter
+
 """ 
     function _get_basins(N_β,β,i,res,ε,max_it) -> data
 
@@ -22,6 +23,8 @@ function _get_basins(N_β,β,i,res,ε,max_it; prefix = string("basins_prox_", i)
     return data
 end
 
+# This is where the iterations are computed until 
+# the stopping criterion is met
 function _get_iterations!(ds, ε, max_it)
     xn_1 = get_state(ds) 
     step!(ds)
@@ -93,7 +96,7 @@ function compute_basins_prox(d)
          (k > 1000) || break
          @show k = k + 1
      end
-    @show q = _estimate_ACOC!(ds, 200,ε, x, y)
+    @show q = tmp_estimate_ACOC!(ds, 200,ε, x, y)
     
 
     return @strdict(β, grid, basins, iterations, exec_time, attractors, Sb, Sbb, fdim, q)
@@ -103,7 +106,7 @@ end
 
 
 # Estimate order
-function  _estimate_ACOC!(ds, T, ε, x, y)
+function  tmp_estimate_ACOC!(ds, T, ε, x, y)
     # yy,t = trajectory(ds, T, [BigFloat(x;precision =128) ,BigFloat(y; precision = 128)])
     yy,t = trajectory(ds, T, [x,y])
     # @show typeof(yy)
@@ -123,4 +126,42 @@ function  _estimate_ACOC!(ds, T, ε, x, y)
     end
     # @show norm(yy[k+1] - yy[k]), k
     return qn
+end
+
+function _get_mean_it(f, β, i, res, ε, max_it; kwargs...)
+    data0 = _get_basins(f, β, i, res, ε, max_it; kwargs...)
+    @unpack iterations,basins,  exec_time = data0
+    ind = findall(basins .!= -1)
+    mit = mean(iterations[ind])
+    return  mit
+end
+
+function _get_mean_t0(f, β, i, res, ε, max_it; kwargs...)
+    data0 = _get_basins(f, β, i, res, ε, max_it; kwargs...)
+    @unpack iterations,basins,  exec_time = data0
+    ind = findall(basins .!= -1)
+    t0_ref = mean(exec_time[ind])
+    return  t0_ref
+end
+
+function _get_mean_nc(f, β, i, res, ε, max_it; kwargs...)
+    data0 = _get_basins(f, β, i, res, ε, max_it; kwargs...)
+    @unpack iterations,basins,  exec_time = data0
+    ind = findall(basins .!= -1)
+    nc = 1-length(ind)/length(basins)
+    return  nc
+end
+
+function _get_mean_ps(f, β, i, res, ε, max_it; kwargs...)
+    data0 = _get_basins(f, β, i, res, ε, max_it; kwargs...)
+    @unpack iterations,basins,  exec_time = data0
+    ind = findall(basins .!= -1)
+    ps_ref = length(ind)/sum(exec_time[ind])
+    return  ps_ref
+end
+
+function _get_q(f, β, i, res, ε, max_it; kwargs...)
+    data0 = _get_basins(f, β, i, res, ε, max_it; kwargs... )
+    @unpack q = data0
+    return  q
 end
