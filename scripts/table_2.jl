@@ -1,71 +1,67 @@
 using DrWatson
 @quickactivate
+using CodecZlib
+using CairoMakie
 using LaTeXStrings
 using Statistics
-using JLD2
-using Roots
-using LinearAlgebra:norm
 include(srcdir("function_stuff.jl"))
 include(srcdir("basins_compute.jl"))
 
 
-function beta(j,β; res = 500, ε = 1e-4, max_it = 50)
-    N_β = beta_map_anneal(func_list[j]); 
-    d = @dict(N_β, β, res, ε, max_it) # parametros
-    d1 = compute_basins_prox(d)
-    @unpack grid, basins, iterations, attractors = d1
-    ind = findall(basins .>= 1)
-    # Only take into account ICs that have converged
-    m1 = mean(iterations[ind])
-    f_div = length(ind)/res^2
-    return m1, f_div
+function set_color_cell(v) 
+    mx = maximum(v)
+    mn = minimum(v) 
+# int(round(100*(#1/(\maxval-\minval))-(\minval*(100/(\maxval-\minval)    
+    cl = @. round(Int, 100*(v/(mx-mn)) - (mn*(100/(mx-mn))))
+    # cl = (v .- mn)./mx
+    vc = [string("\\cellcolor{red!", c , "!green!15}") for c in cl]
+    return vc 
 end
 
-function compute_annealing()
-    ε = 1e-15
-    beta_it_0 = zeros(15)
-    beta_it_1 = zeros(15)
-    beta_it_an = zeros(15)
-    beta_it_an2 = zeros(15)
-    for n in 1:15
-        # print(string_list[n], " & ")
-        # for (k,β) in enumerate(beta_range)
-            β0(x,y) = 0. 
-            m2, f2 = beta(n,β0;ε); 
-            beta_it_0[n] = m2
-            # print(round(m2,digits =1) , " & ")
-            β1(x,y) = 1.
-            m2, f2 = beta(n,β1;ε); 
-            beta_it_1[n] = m2
-            # print(round(m2,digits =1) , " & ")
-            β3(x,y) =  (1 - 1/(1+(0.1*abs(x))^6))
-            m3, f3 = beta(n,β3;ε); 
-            beta_it_an[n] = m3
-            # print(round(m3,digits =1), " & ")
-            β4(x,y) =  2*x/(x+y)
-            m4, f4 = beta(n,β4;ε); 
-            beta_it_an2[n] = m4
-            # print(round(m4,digits =1))
-        # end
-        # println(" \\\\")
-        # println("\\hline")
+function print_table_all()
+    res = 1000; ε = 1.e-14;  max_it = 50
+    open("table2_dat.txt","w") do io
+    for i in  [1:13; 15; 17]
+        print(io, "{\\footnotesize ", string_list[i], "} " )
+        N_β = beta_map(func_list[i])
+        β4(x,y) =  2*x/(x+y)
+        N_β_anneal = beta_map_anneal(func_list[i])
+
+        t0_ref = _get_mean_t0(N_β, 0., i, res, ε, max_it)
+        ps_ref = _get_mean_ps(N_β, 0., i, res, ε, max_it)
+
+        # Mean iterations
+        m0 = _get_mean_it(N_β, 0., i, res, ε, max_it)
+        m1 = _get_mean_it(N_β, 1., i, res, ε, max_it)
+        m_anneal = _get_mean_it(N_β_anneal, β4, i, res, ε, max_it; prefix = string("basins_anneal_", i))
+        vec_col = set_color_cell([m0, m1, m_anneal])
+        print(io, " & ", vec_col[1],  round(m0, digits =1))
+        print(io, " & ", vec_col[2],  round(m1, digits =1))
+        print(io, " & ", vec_col[3],  round(m_anneal, digits =1))
+
+        # Non converging points 
+        nc0 = _get_mean_nc(N_β, 0., i, res, ε, max_it)
+        nc1 = _get_mean_nc(N_β, 1., i, res, ε, max_it)
+        nc_anneal = _get_mean_nc(N_β_anneal, β4, i, res, ε, max_it; prefix = string("basins_anneal_", i))
+        vec_col = set_color_cell([nc0, nc1, nc_anneal])
+        print(io, " & ", vec_col[1],  round(Int, nc0*100))
+        print(io, " & ", vec_col[2],  round(Int, nc1*100))
+        print(io, " & ", vec_col[3],  round(Int, nc_anneal*100))
+
+        # Computational time 
+        t0 = _get_mean_t0(N_β, 0., i, res, ε, max_it)
+        t1 = _get_mean_t0(N_β, 1., i, res, ε, max_it)
+        t_anneal = _get_mean_t0(N_β_anneal, β4, i, res, ε, max_it; prefix = string("basins_anneal_", i))
+        vec_col = set_color_cell([t0/t0_ref, t1/t0_ref, t_anneal/t0_ref])
+        print(io, " & ", vec_col[1],  round(t0/t0_ref, digits =2))
+        print(io, " & ", vec_col[2],  round(t1/t0_ref, digits =2))
+        print(io, " & ", vec_col[3],  round(t_anneal/t0_ref, digits =2))
+        println(io," \\\\")
     end
-    @save "newton_annealing.jld2" beta_it_0 beta_it_1 beta_it_an beta_it_an2
-end
-
-
-function print_table()
-    @load  "newton_annealing.jld2" beta_it_0 beta_it_1 beta_it_an beta_it_an2
-    for n in 1:15
-        print(string_list[n], " & ")
-        print(round(beta_it_0[n],digits =1) , " & ")
-        print(round(beta_it_1[n],digits =1) , " & ")
-        # print(round(beta_it_an[n],digits =1), " & ")
-        print(round(beta_it_an2[n],digits =1))
-        println(" \\\\")
-        println("\\hline")
     end
 end
 
-# compute_annealing()
-print_table()
+print_table_all()
+
+
+
