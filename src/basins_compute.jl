@@ -15,7 +15,7 @@ function _get_basins(N_β,β,i,res,ε,max_it; prefix = string("basins_prox_", i)
     data, file = produce_or_load(
         datadir(""), # path
         d, # container for parameter
-        compute_basins_prox, # function
+        compute_basins, # function
         prefix = prefix, # prefix for savename
         force = false, # true for forcing sims
         wsave_kwargs = (;compress = true)
@@ -43,7 +43,7 @@ end
 
 
 """
-    compute_basins_prox(d) -> Dict
+    compute_basins(d) -> Dict
 
 Compute the basins using first AttractorsViaRecurrences to 
 locate the attractors (roots) of the function N_β. These 
@@ -53,12 +53,12 @@ when |f(x) - r| < ε.
 The basins, the iteration matrix, the metrics and the attractors
 are returned into a name dictionnary. 
 """
-function compute_basins_prox(d)
+function compute_basins(d)
     @unpack N_β, β, res, ε, max_it = d
     ds = DiscreteDynamicalSystem(N_β, [0.1, 0.2], [β])
-    # Use non-sparse for using `basins_of_attraction`
     xg = yg = range(-10, 10; length = 10000)
     grid = (xg, yg)
+    # We set up a mapper so that we can identify roots automatically  
     mapper_beta = AttractorsViaRecurrences(ds, (xg, yg);
             sparse = true, consecutive_recurrences = 3000
     )
@@ -68,12 +68,14 @@ function compute_basins_prox(d)
     basins = zeros(Int8, res,res); iterations = zeros(Int16,res,res)
     exec_time = zeros(res,res)
 
-@showprogress    for (i,x) in enumerate(xg), (j,y) in enumerate(yg) 
+@showprogress for (i,x) in enumerate(xg), (j,y) in enumerate(yg) 
         set_state!(ds, [x,y])
         n = @timed _get_iterations!(ds,ε,max_it)
         if n.value > max_it
+            # the alg. did not converge
             basins[i,j] = -1
         else
+            # We identify the root with the mapper.
             basins[i,j] = mapper_beta([x,y])
         end
         iterations[i,j] = n.value
@@ -84,7 +86,7 @@ function compute_basins_prox(d)
     _,_,fdim = basins_fractal_dimension(basins)
     attractors = extract_attractors(mapper_beta)
      
-    x,y = choose_ic!(ds, max_it, ε) 
+    x,y = choose_valid_ic!(ds, max_it, ε) 
     @show q = estimate_ACOC!(ds, 200,ε, x, y)
     
 
@@ -92,7 +94,7 @@ function compute_basins_prox(d)
 end
 
 
-function choose_ic!(ds, max_it, ε) 
+function choose_valid_ic!(ds, max_it, ε) 
  # make sure we pick an IC that converge to a root
  # with enough iterations (at least 8). 
      x = 0.; y = 0.; k = 0
@@ -101,9 +103,11 @@ function choose_ic!(ds, max_it, ε)
          y = 4*(rand()-0.5)
          set_state!(ds, [x,y])
          n = _get_iterations!(ds,ε,max_it)
-         ((n > max_it) || (n < 8)) || break
-         (k > 1000) || break
-         @show k = k + 1
+         if (n < max_it) && (n ≥ 10)
+            break
+         end
+         (k < 1000) || break
+         k = k + 1
      end
      return x,y
  end
@@ -111,24 +115,18 @@ function choose_ic!(ds, max_it, ε)
 
 # Estimate order
 function  estimate_ACOC!(ds, T, ε, x, y)
-    # yy,t = trajectory(ds, T, [BigFloat(x;precision =128) ,BigFloat(y; precision = 128)])
     yy,t = trajectory(ds, T, [x,y])
-    # @show typeof(yy)
     qn_1 = 10000
     qn = qn_1 - 1
     k = 3
-    # while norm(qn - qn_1) > ε && norm(yy[k+1] - yy[k]) > ε
     while norm(yy[k+1] - yy[k]) > ε
         (k > T-2) && break 
         num = log(norm(yy[k+1] - yy[k])) - log(norm(yy[k] - yy[k-1])) 
         den = log(norm(yy[k] - yy[k-1]))- log(norm(yy[k-1] - yy[k-2]))
-        # num = log(norm(yy[k+1] - root)/norm(yy[k] - root)) 
-        # den = log(norm(yy[k] - root)/norm(yy[k-1] - root))
         qn_1 = qn
         qn = num/den
         k = k + 1 
     end
-    # @show norm(yy[k+1] - yy[k]), k
     return qn
 end
 
@@ -164,8 +162,9 @@ function _get_mean_ps(f, β, i, res, ε, max_it; kwargs...)
     return  ps_ref
 end
 
-function _get_q(f, β, i, res, ε, max_it; kwargs...)
-    data0 = _get_basins(f, β, i, res, ε, max_it; kwargs... )
-    @unpack q = data0
+function _get_q(N_β, β, i, res, ε, max_it; kwargs...)
+    ds = DiscreteDynamicalSystem(N_β, [0.1, 0.2], [β])
+    x,y = choose_valid_ic!(ds, max_it, ε) 
+    @show q = estimate_ACOC!(ds, 200,ε, x, y)
     return  q
 end

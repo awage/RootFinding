@@ -8,12 +8,12 @@ include(srcdir("function_stuff.jl"))
 include(srcdir("basins_compute.jl"))
 
 
+# This small functions sets a color gradient between red and green depending 
+# on the values in the input array
 function set_color_cell(v) 
     mx = maximum(v)
     mn = minimum(v) 
-# int(round(100*(#1/(\maxval-\minval))-(\minval*(100/(\maxval-\minval)    
     cl = @. round(Int, 100*(v/(mx-mn)) - (mn*(100/(mx-mn))))
-    # cl = (v .- mn)./mx
     vc = [string("\\cellcolor{red!", c , "!green!15}") for c in cl]
     return vc 
 end
@@ -27,8 +27,6 @@ function print_table_all()
         β4(x,y) =  2*x/(x+y)
         N_β_anneal = beta_map_anneal(func_list[i])
 
-        t0_ref = _get_mean_t0(N_β, 0., i, res, ε, max_it)
-        ps_ref = _get_mean_ps(N_β, 0., i, res, ε, max_it)
 
         # Mean iterations
         m0 = _get_mean_it(N_β, 0., i, res, ε, max_it)
@@ -49,11 +47,11 @@ function print_table_all()
         print(io, " & ", vec_col[3],  round(Int, nc_anneal*100))
 
         # Computational time 
-        t0 = _get_mean_t0(N_β, 0., i, res, ε, max_it)
+        t0_ref = _get_mean_t0(N_β, 0., i, res, ε, max_it)
         t1 = _get_mean_t0(N_β, 1., i, res, ε, max_it)
         t_anneal = _get_mean_t0(N_β_anneal, β4, i, res, ε, max_it; prefix = string("basins_anneal_", i))
         vec_col = set_color_cell([t0/t0_ref, t1/t0_ref, t_anneal/t0_ref])
-        print(io, " & ", vec_col[1],  round(t0/t0_ref, digits =2))
+        print(io, " & ", vec_col[1],  round(t0_ref/t0_ref, digits =2))
         print(io, " & ", vec_col[2],  round(t1/t0_ref, digits =2))
         print(io, " & ", vec_col[3],  round(t_anneal/t0_ref, digits =2))
         println(io," \\\\")
