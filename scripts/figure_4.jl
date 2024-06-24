@@ -1,6 +1,7 @@
 using DrWatson
 @quickactivate
 using CairoMakie
+using CodecZlib
 using LaTeXStrings
 using Statistics:mean
 include("../src/function_stuff.jl")
@@ -32,20 +33,21 @@ for i in f_list, β in β_range
 end
 
 # Plot metrics as a function of β
-β_range = range(-1.,1,step = 0.1)
+β_range = range(-1.,1,step = 0.01)
 res = 1000; ε = 1e-14; max_it = 50
 for i in f_list
     Sb_v = zeros(length(β_range))
     Sbb_v = zeros(length(β_range))
     fdim_v = zeros(length(β_range))
-    for (k,β) in enumerate(β_range)
+    Threads.@threads for k in eachindex(β_range)
         N_β = beta_map(func_list[i])
-        data = _get_basins(N_β, β, i, res, ε,max_it)
+        data = _get_basins(N_β, β_range[k], i, res, ε,max_it)
         @unpack iterations, Sb, Sbb, fdim = data
         Sb_v[k],Sbb_v[k],fdim_v[k] = Sb, Sbb, fdim
     end
     f = Figure()
-    ax = Axis(f[1,1], ylabel = L"S_b", xlabel = L"\beta")
+
+    ax = Axis(f[1,1], ylabel = L"S_b", xlabel = L"\beta", yticklabelsize = 30, xticklabelsize = 30, ylabelsize = 30, xlabelsize = 40)
     lines!(ax, β_range, Sb_v, color = :black)
     s = plotsdir(string("fig_metrics_prox_f", i, ".png"))
     save(s, f)

@@ -84,8 +84,17 @@ function compute_basins_prox(d)
     _,_,fdim = basins_fractal_dimension(basins)
     attractors = extract_attractors(mapper_beta)
      
-     # make sure we pick an IC that converge to a root
-     # with enough iterations (at least 8). 
+    x,y = choose_ic!(ds, max_it, ε) 
+    @show q = estimate_ACOC!(ds, 200,ε, x, y)
+    
+
+    return @strdict(β, grid, basins, iterations, exec_time, attractors, Sb, Sbb, fdim, q)
+end
+
+
+function choose_ic!(ds, max_it, ε) 
+ # make sure we pick an IC that converge to a root
+ # with enough iterations (at least 8). 
      x = 0.; y = 0.; k = 0
      while true 
          x = 4*(rand()-0.5)
@@ -96,17 +105,12 @@ function compute_basins_prox(d)
          (k > 1000) || break
          @show k = k + 1
      end
-    @show q = tmp_estimate_ACOC!(ds, 200,ε, x, y)
-    
-
-    return @strdict(β, grid, basins, iterations, exec_time, attractors, Sb, Sbb, fdim, q)
-end
-
-
+     return x,y
+ end
 
 
 # Estimate order
-function  tmp_estimate_ACOC!(ds, T, ε, x, y)
+function  estimate_ACOC!(ds, T, ε, x, y)
     # yy,t = trajectory(ds, T, [BigFloat(x;precision =128) ,BigFloat(y; precision = 128)])
     yy,t = trajectory(ds, T, [x,y])
     # @show typeof(yy)
