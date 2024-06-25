@@ -9,15 +9,14 @@ Convenience function to compute and store the basins
 and attractors of the funcion i. with the proximity algorithm
 
 """
-function _get_basins(N_β,β,i,res,ε,max_it; prefix = string("basins_prox_", i))
-    # N_β = beta_map(f)
+function _get_basins(N_β,β,i,res,ε,max_it; prefix = string("basins_prox_", i), force = false)
     d = @dict(N_β, β, res, ε, max_it) # parametros
     data, file = produce_or_load(
         datadir(""), # path
         d, # container for parameter
         compute_basins, # function
         prefix = prefix, # prefix for savename
-        force = false, # true for forcing sims
+        force = force, # true for forcing sims
         wsave_kwargs = (;compress = true)
     )
     return data
@@ -165,7 +164,7 @@ end
 function _get_q(N_β, β, i, res, ε, max_it; kwargs...)
     ds = DiscreteDynamicalSystem(N_β, [0.1, 0.2], [β])
     x,y = choose_valid_ic!(ds, max_it, ε) 
-    @show q = estimate_ACOC!(ds, 200,ε, x, y)
+    q = estimate_ACOC!(ds, 200,ε, x, y)
     return  q
 end
 
