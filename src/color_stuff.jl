@@ -82,7 +82,7 @@ function plot_heatmap(grid, basins, iterations, attractors; ukeys = unique(basin
     add_legend = length(ukeys) < 7
 
     if shaded 
-        @show max_it = median(iterations)*2
+        max_it = median(iterations)*2
         it = findall(iterations .> max_it)
         iterations[it] .= max_it
         for i in ids 
