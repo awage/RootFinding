@@ -68,7 +68,7 @@ function custom_colormap(ukeys)
     return cgrad(v_col, vals/maximum(vals))
 end
 
-function plot_heatmap(grid, basins, iterations, attractors; ukeys = unique(basins), shaded = true, show_attractors = true, kwargs...) 
+function plot_heatmap(grid, basins, iterations, attractors; ukeys = unique(basins), shaded = true, show_attractors = true,  kwargs...) 
     sort!(ukeys) # necessary because colormap is ordered
     ids = 1:length(ukeys)
     replace_dict = Dict(k => i for (i, k) in enumerate(ukeys))
@@ -82,9 +82,9 @@ function plot_heatmap(grid, basins, iterations, attractors; ukeys = unique(basin
     add_legend = length(ukeys) < 7
 
     if shaded 
-        maxit = median(iterations)*2
-        it = findall(iterations .> maxit)
-        iterations[it] .= maxit
+        max_it = median(iterations)*2
+        it = findall(iterations .> max_it)
+        iterations[it] .= max_it
         for i in ids 
             ind = findall(basins_to_plot .== i) 
             mn = minimum(iterations[ind])
