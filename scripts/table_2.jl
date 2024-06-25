@@ -8,15 +8,6 @@ include(srcdir("function_stuff.jl"))
 include(srcdir("basins_compute.jl"))
 
 
-# This small functions sets a color gradient between red and green depending 
-# on the values in the input array
-function set_color_cell(v) 
-    mx = maximum(v)
-    mn = minimum(v) 
-    cl = @. round(Int, 100*(v/(mx-mn)) - (mn*(100/(mx-mn))))
-    vc = [string("\\cellcolor{red!", c , "!green!15}") for c in cl]
-    return vc 
-end
 
 function print_table_all()
     res = 1000; ε = 1.e-14;  max_it = 50
