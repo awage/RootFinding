@@ -87,7 +87,7 @@ function compute_basins(d)
     attractors = extract_attractors(mapper_beta)
      
     x,y = choose_valid_ic!(ds, max_it, ε) 
-    @show q = estimate_ACOC!(ds, 200,ε, x, y)
+    q = estimate_ACOC!(ds, 200,ε, x, y)
     
 
     return @strdict(β, grid, basins, iterations, exec_time, attractors, Sb, Sbb, fdim, q)
