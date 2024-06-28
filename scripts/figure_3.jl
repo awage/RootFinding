@@ -26,7 +26,7 @@ end
 
 # Plot all basins 
 β_range = [-1, -0.5, 0., 0.5, 1.]
-f_list = [2,7,15]
+f_list = [2,7,14]
 res = 2000
 for i in f_list, β in β_range
     plot_basins(func_list[i], β, i, res; shaded = true)

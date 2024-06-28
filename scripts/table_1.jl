@@ -14,7 +14,7 @@ function print_table_all()
     res = 1000; ε = 1.e-14;  max_it = 50
 
     open("table1_dat.txt","w") do io
-    for i in  [1:13; 15]
+    for i in  1:14
         println(string_list[i])
         print(io,"{\\footnotesize ", string_list[i], "}" )
         N_β = beta_map(func_list[i])

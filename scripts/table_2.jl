@@ -12,7 +12,7 @@ include(srcdir("basins_compute.jl"))
 function print_table_all()
     res = 1000; ε = 1.e-14;  max_it = 50
     open("table2_dat.txt","w") do io
-    for i in  [1:13; 15]
+    for i in  1:14
         print(io, "{\\footnotesize ", string_list[i], "} " )
         N_β = beta_map(func_list[i])
         β4(x,y) =  2*x^2/(x^2+y^2)
