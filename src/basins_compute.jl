@@ -9,7 +9,7 @@ Convenience function to compute and store the basins
 and attractors of the funcion i. with the proximity algorithm
 
 """
-function _get_basins(N_β,β,i,res,ε,max_it; prefix = string("basins_prox_", i), force = false)
+function _get_basins(N_β, β, i, res, ε, max_it; prefix = string("basins_prox_", i), force = false)
     d = @dict(N_β, β, res, ε, max_it) # parametros
     data, file = produce_or_load(
         datadir(""), # path
