@@ -3,14 +3,14 @@ using LinearAlgebra:norm
 using ProgressMeter
 
 """ 
-    function _get_basins(N_β,β,i,res,ε,max_it) -> data
+    function _get_basins(N,i,res,ε,max_it) -> data
 
 Convenience function to compute and store the basins
 and attractors of the funcion i. with the proximity algorithm
 
 """
-function _get_basins(N_β, β, i, res, ε, max_it; prefix = string("basins_prox_", i), force = false)
-    d = @dict(N_β, β, res, ε, max_it) # parametros
+function _get_basins(N, res, ε, max_it; prefix = string("basins_prox_", i), force = false)
+    d = @dict(N, res, ε, max_it) # parametros
     data, file = produce_or_load(
         datadir(""), # path
         d, # container for parameter
@@ -53,8 +53,8 @@ The basins, the iteration matrix, the metrics and the attractors
 are returned into a name dictionnary. 
 """
 function compute_basins(d)
-    @unpack N_β, β, res, ε, max_it = d
-    ds = DiscreteDynamicalSystem(N_β, [0.1, 0.2], [β])
+    @unpack N,  res, ε, max_it = d
+    ds = DiscreteDynamicalSystem(N, [0.1, 0.2])
     xg = yg = range(-10, 10; length = 10000)
     grid = (xg, yg)
     # We set up a mapper so that we can identify roots automatically  
@@ -64,7 +64,7 @@ function compute_basins(d)
     xg = yg = range(-2, 2; length = res)
     grid = (xg, yg)
 
-    basins = zeros(Int8, res,res); iterations = zeros(Int16,res,res)
+    basins = zeros(Int32,res,res); iterations = zeros(Int16,res,res)
     exec_time = zeros(res,res)
 
 @showprogress for (i,x) in enumerate(xg), (j,y) in enumerate(yg) 
@@ -88,8 +88,7 @@ function compute_basins(d)
     x,y = choose_valid_ic!(ds, max_it, ε) 
     q = estimate_ACOC!(ds, 200,ε, x, y)
     
-
-    return @strdict(β, grid, basins, iterations, exec_time, attractors, Sb, Sbb, fdim, q)
+    return @strdict(grid, basins, iterations, exec_time, attractors, Sb, Sbb, fdim, q)
 end
 
 

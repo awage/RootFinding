@@ -57,6 +57,31 @@ function beta_map(f)
     return N_β
 end
 
+function stephenson_map(f)
+        h(z) = f(z)
+        g(z) = (f(z + h(z)) - f(z))/h(z)
+        u(z) = f(z)/g(z)
+    function N(z1, p, n)
+        z = z1[1] + im * z1[2]
+        isnan(u(z)) && return SVector(real(z), imag(z))
+        z_new =  z - u(z) 
+        return SVector(real(z_new), imag(z_new))
+    end
+    return N
+end
+
+function stephensontanh_map(f)
+        h(z) = tanh(f(z))
+        g(z) = (f(z + h(z)) - f(z))/h(z)
+        u(z) = f(z)/g(z)
+    function N(z1, p, n)
+        z = z1[1] + im * z1[2]
+        isnan(u(z)) && return SVector(real(z), imag(z))
+        z_new =  z - u(z) 
+        return SVector(real(z_new), imag(z_new))
+    end
+    return N
+end
 
 function beta_map_anneal(f)
     ∂f∂z = ∂f(f)
