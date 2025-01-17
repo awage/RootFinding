@@ -22,10 +22,28 @@ end
 
 
 # Plot all basins 
-res = 200; 
-for (k,f) in enumerate(func_list)
+res = 500; 
+for k in 1:14
+    N = stephensontanh_map(func_list[k])
+    try
+        plot_basins(N, res; prefix = string("stephensontanh_f",k), force = false)
+    catch 
+        println("ERROR")
+    end
+
     N = stephenson_map(func_list[k])
-    plot_basins(N, res; prefix = string("stephenson_f",k), force = true)
+    try
+        plot_basins(N, res; prefix = string("stephenson_f",k), force = false)
+    catch 
+        println("ERROR")
+    end
+
+    N = beta_map(func_list[k], 0.)
+    try
+        plot_basins(N, res; prefix = string("Newton_f",k), force = false)
+    catch 
+        println("ERROR")
+    end
 end 
 # res = 200
 # f(z) = z^3 - z
