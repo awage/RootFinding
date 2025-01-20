@@ -30,7 +30,7 @@ function markers_from_keys(ukeys)
 end
 
 
-function custom_colormap(ukeys)
+function custom_colormap(ukeys, shaded)
     # Unfortunately, until `to_color` works with `Cycled`,
     # we need to explicitly add here some default colors...
     COLORS =[ 
@@ -41,7 +41,7 @@ function custom_colormap(ukeys)
         :purple,
         :yellow,]
     LIGHT_COLORS = [
-        :gray95,
+        :black,
         :lightsalmon,
         :darkseagreen1,
         :azure,
@@ -54,14 +54,18 @@ function custom_colormap(ukeys)
         :navyblue,
         :purple4,
         :gold4,]      
+    if -1 ∉ ukeys; popfirst!(COLORS); popfirst!(LIGHT_COLORS); popfirst!(DARK_COLORS); end
     n = length(COLORS)
     v_col = []
     vals = zeros(2*length(ukeys))
     for k in eachindex(ukeys)
-        # push!(v_col, COLORS[mod(k-1,n)+1])
-        # push!(v_col, :black)
-        push!(v_col, LIGHT_COLORS[mod(k-1,n)+1])
-        push!(v_col, DARK_COLORS[mod(k-1,n)+1])
+        if shaded 
+            push!(v_col, LIGHT_COLORS[mod(k-1,n)+1])
+            push!(v_col, DARK_COLORS[mod(k-1,n)+1])
+        else
+            push!(v_col, DARK_COLORS[mod(k-1,n)+1])
+            push!(v_col, DARK_COLORS[mod(k-1,n)+1])
+        end
         vals[2*k-1] = k-1
         vals[2*k] = k-1+0.9999999999
     end
@@ -75,7 +79,7 @@ function plot_heatmap(grid, basins, iterations, attractors; ukeys = unique(basin
     basins_to_plot = replace(basins.*1., replace_dict...)
     access = SVector(1,2)
     
-    cmap = custom_colormap(ukeys)
+    cmap = custom_colormap(ukeys, shaded)
     colors = colors_from_keys(ukeys)
     markers = markers_from_keys(ukeys)
     labels = Dict(ukeys .=> ukeys)

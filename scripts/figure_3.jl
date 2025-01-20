@@ -8,12 +8,11 @@ include("../src/function_stuff.jl")
 include("../src/color_stuff.jl")
 include("../src/basins_compute.jl")
 
-
 function plot_basins(N, res, ε = 1e-14, max_it =50; force = false, shaded = true, show_attractors = false, prefix = "stephenson")
     data = _get_basins(N, res, ε, max_it; force, prefix)
     @unpack basins, iterations, attractors, grid = data
     @show bas_num = unique(basins)
-    if length(bas_num) > 1
+    if  1 < length(bas_num) < 100
         fig = plot_heatmap(grid, basins, iterations, attractors; ukeys = bas_num, shaded, show_attractors, xticksvisible = false, yticksvisible = false, xticklabelsvisible = false, yticklabelsvisible = false)
         s = plotsdir(savename(string(prefix), @dict(res,ε),"png"))
         save(s, fig)
@@ -26,21 +25,21 @@ res = 500;
 for k in 1:14
     N = stephensontanh_map(func_list[k])
     try
-        plot_basins(N, res; prefix = string("stephensontanh_f",k), force = false)
+        plot_basins(N, res; prefix = string("stephensontanh_f",k), force = false, shaded = true)
     catch 
         println("ERROR")
     end
 
     N = stephenson_map(func_list[k])
     try
-        plot_basins(N, res; prefix = string("stephenson_f",k), force = false)
+        plot_basins(N, res; prefix = string("stephenson_f",k), force = false, shaded = true)
     catch 
         println("ERROR")
     end
 
     N = beta_map(func_list[k], 0.)
     try
-        plot_basins(N, res; prefix = string("Newton_f",k), force = false)
+        plot_basins(N, res; prefix = string("Newton_f",k), force = false, shaded = true)
     catch 
         println("ERROR")
     end
