@@ -1,5 +1,5 @@
-name = "RootFinding"
-authors = ["Junghyo Jo, Alexandre Wagamkers, Vipul Periwal"]
+name = "SteffensenRF"
+authors = ["Junghyo Jo, Alexandre Wagemakers, Vipul Periwal"]
 
 [deps]
 Attractors = "f3fd9213-ca85-4dba-9dfd-7fc91308fec7"

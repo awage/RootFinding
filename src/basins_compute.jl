@@ -128,40 +128,40 @@ function  estimate_ACOC!(ds, T, ε, x, y)
     return qn
 end
 
-function _get_mean_it(f, β, i, res, ε, max_it; kwargs...)
-    data0 = _get_basins(f, β, i, res, ε, max_it; kwargs...)
+function _get_mean_it(f, i, res, ε, max_it; kwargs...)
+    data0 = _get_basins(f, i, res, ε, max_it; kwargs...)
     @unpack iterations,basins,  exec_time = data0
     ind = findall(basins .!= -1)
     mit = mean(iterations[ind])
     return  mit
 end
 
-function _get_mean_t0(f, β, i, res, ε, max_it; kwargs...)
-    data0 = _get_basins(f, β, i, res, ε, max_it; kwargs...)
+function _get_mean_t0(f, i, res, ε, max_it; kwargs...)
+    data0 = _get_basins(f, i, res, ε, max_it; kwargs...)
     @unpack iterations,basins,  exec_time = data0
     ind = findall(basins .!= -1)
     t0_ref = mean(exec_time[ind])
     return  t0_ref
 end
 
-function _get_mean_nc(f, β, i, res, ε, max_it; kwargs...)
-    data0 = _get_basins(f, β, i, res, ε, max_it; kwargs...)
+function _get_mean_nc(f, i, res, ε, max_it; kwargs...)
+    data0 = _get_basins(f, i, res, ε, max_it; kwargs...)
     @unpack iterations,basins,  exec_time = data0
     ind = findall(basins .!= -1)
     nc = 1-length(ind)/length(basins)
     return  nc
 end
 
-function _get_mean_ps(f, β, i, res, ε, max_it; kwargs...)
-    data0 = _get_basins(f, β, i, res, ε, max_it; kwargs...)
+function _get_mean_ps(f, i, res, ε, max_it; kwargs...)
+    data0 = _get_basins(f, i, res, ε, max_it; kwargs...)
     @unpack iterations,basins,  exec_time = data0
     ind = findall(basins .!= -1)
     ps_ref = length(ind)/sum(exec_time[ind])
     return  ps_ref
 end
 
-function _get_q(N_β, β, i, res, ε, max_it; kwargs...)
-    ds = DiscreteDynamicalSystem(N_β, [0.1, 0.2], [β])
+function _get_q(N, i, res, ε, max_it; kwargs...)
+    ds = DiscreteDynamicalSystem(N, [0.1, 0.2])
     x,y = choose_valid_ic!(ds, max_it, ε) 
     q = estimate_ACOC!(ds, 200,ε, x, y)
     return  q

@@ -17,26 +17,25 @@ function print_table_all()
     for i in  1:14
         println(string_list[i])
         print(io,"{\\footnotesize ", string_list[i], "}" )
-        N_β = beta_map(func_list[i])
+
+        g = tanh
+        N = stephenson_map(func_list[i], g)
 
         # Mean iterations
-        m_it = [_get_mean_it(N_β, β, i, res, ε, max_it) for β in β_range]
-        for k in eachindex(β_range)
-            print(io," & ",  round(m_it[k], digits =1))
-        end
+        m_it = _get_mean_it(N, i, res, ε, max_it) 
+        print(io," & ",  round(m_it, digits =1))
+
+        # for k in eachindex(β_range)
+        #     print(io," & ",  round(m_it[k], digits =1))
+        # end
 
         # Non converging points 
-        nc = [_get_mean_nc(N_β, β, i, res, ε, max_it) for β in β_range]
-        for k in eachindex(β_range)
-            print(io, " & ",  round(Int,100-100*nc[k]))
-        end
+        nc = _get_mean_nc(N, i, res, ε, max_it) 
+        print(io, " & ",  round(Int,100-100*nc))
 
         # Computational time refered to the case β = 0 
-        t0_ref = _get_mean_t0(N_β, 0., i, res, ε, max_it)
-        t0 = [_get_mean_t0(N_β, β, i, res, ε, max_it) for β in β_range]
-        for k in eachindex(β_range)
-            print(io, " & ",  round(t0[k]/t0_ref, digits =2))
-        end
+        t0_ref = _get_mean_t0(N, i, res, ε, max_it)
+        print(io, " & ",  round(t0_ref, digits =2))
         println(io," \\\\")
     end
     end
