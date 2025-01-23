@@ -23,14 +23,24 @@ end
 # Plot all basins 
 res = 500; 
 for k in 1:14
-    N = stephensontanh_map(func_list[k])
+    g = tanh
+    N = stephenson_map(func_list[k], g)
     try
-        plot_basins(N, res; prefix = string("stephensontanh_f",k), force = false, shaded = true)
+        plot_basins(N, res; prefix = string("stephensontanh_f",k), force = true, shaded = true)
     catch 
         println("ERROR")
     end
 
-    N = stephenson_map(func_list[k])
+
+    gg(z) = min(0.2, abs(z))*exp(im*angle(z))
+    N = stephenson_map(func_list[k], gg)
+    try
+        plot_basins(N, res; prefix = string("stephensontanh_f",k), force = true, shaded = true)
+    catch 
+        println("ERROR")
+    end
+
+    N = stephenson_map(func_list[k], identity)
     try
         plot_basins(N, res; prefix = string("stephenson_f",k), force = false, shaded = true)
     catch 
@@ -44,6 +54,7 @@ for k in 1:14
         println("ERROR")
     end
 end 
+
 # res = 200
 # f(z) = z^3 - z
 # N = stephenson_map(f)
