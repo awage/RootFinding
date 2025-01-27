@@ -23,7 +23,7 @@ end
 # Plot all basins 
 res = 500; 
 for k in 1:14
-    g = tanh
+    g(z) = 0.05*tanh(abs(z)/0.05)*exp(im*angle(z))
     N = stephenson_map(func_list[k], g)
     try
         plot_basins(N, res; prefix = string("stephensontanh_f",k), force = true, shaded = true)
@@ -35,7 +35,7 @@ for k in 1:14
     gg(z) = min(0.2, abs(z))*exp(im*angle(z))
     N = stephenson_map(func_list[k], gg)
     try
-        plot_basins(N, res; prefix = string("stephensontanh_f",k), force = true, shaded = true)
+        plot_basins(N, res; prefix = string("stephensontanh_f",k), force = false, shaded = true)
     catch 
         println("ERROR")
     end

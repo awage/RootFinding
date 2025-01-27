@@ -1,5 +1,16 @@
 using ForwardDiff: derivative
 
+func_list_benchmark = [x -> (x - 1)*(x - 2)*(x - 3)*(x - 4)*(x - 5),
+x -> (x - 1)^3 - 1,
+x ->  exp(x^2+x*cos(x)-1)*sin(x) + log(x^2+1), 
+x -> abs(x^2-9)]
+
+string_list_benchmark = [L"f_1(x) = \Pi (x - i)",
+               L"f_2(x) = x -> (x - 1)^3 - 1",
+               L"f_3(x) = x ->  exp(x^2+x*cos(x)-1)*sin(x) + log(x^2+1)", 
+               L"f_4(x) = x -> abs(x^2-9)"]
+
+
 func_list = [x -> (x*x - 1) * (x*x + 1),
 x -> x*x*x - 1,
 x -> x^12 - 1,
@@ -31,6 +42,10 @@ L"f_{12}(x) = (x-2)^3 - 10",
 L"f_{13}(x) = (x + 5/4)~  e^{(x + 5/4)^2} - \sin(x + 5/4)^2 + 3\cos(x + 5/4) + 5",
 L"f_{14}(x) = (x + sin(2/x)  x^2)"]
 
+    fam_list = [
+    z -> 0.2*tanh(abs(z)/22)*exp(im*angle(z)), 
+    z ->  min(0.2, abs(z))*exp(im*angle(z)), 
+    z -> z] 
 
 function ∂f(f)
 # Warning. This trick works only for holomorphic functions. 
@@ -44,6 +59,7 @@ function N_map(z, f, ∂f∂z)
     return  z - dz
 end
 
+# For modified two step newton method with β
 function beta_map(f, β)
     ∂f∂z = ∂f(f)
     N(z) = N_map(z, f, ∂f∂z)
@@ -57,6 +73,7 @@ function beta_map(f, β)
     return N_β
 end
 
+# Generalized Steffenson method 
 function stephenson_map(f::Function, g::Function)
         h(z) = g(f(z))
         d(z) = (f(z + h(z)) - f(z))/h(z)
@@ -70,54 +87,18 @@ function stephenson_map(f::Function, g::Function)
     return N
 end
 
-function stephensontanh_map(f)
-        gg(z) = min(0.2, abs(z))*exp(im*angle(z))
-        h(z) = gg(f(z))
-        # h(z) = tanh(f(z))
-        g(z) = (f(z + h(f(z))) - f(z))/h(f(z))
-        u(z) = f(z)/g(z)
-    function N(z1, p, n)
-        z = z1[1] + im * z1[2]
-        isnan(u(z)) && return SVector(real(z), imag(z))
-        z_new =  z - u(z) 
-        return SVector(real(z_new), imag(z_new))
+
+# Generalized Steffenson method real values
+function stephenson_map_real(f::Function, g::Function)
+        h(x) = g(f(x))
+        d(x) = (f(x + h(x)) - f(x))/h(x)
+        u(x) = f(x)/d(x)
+    function N(x1, p, n)
+        x = x1[1] + im * x1[2]
+        isnan(u(x)) && return SVector(real(x), imag(x))
+        x_new =  x - u(x) 
+        return SVector(real(x_new), imag(x_new))
     end
     return N
 end
 
-function beta_map_anneal(f)
-    ∂f∂z = ∂f(f)
-    N(z) = N_map(z, f, ∂f∂z)
-    function N_β(z1, p, n)
-        β = p[1]
-        z = z1[1] + im * z1[2]
-        N_z = N(z)
-        z_new =  N_z - β(∂f∂z(z), ∂f∂z(N_z)) * f(N_z)/∂f∂z(z)
-        return SVector(real(z_new), imag(z_new))
-    end
-    return N_β
-end
-
-function beta_map_real(f)
-    ∂f∂x(x) = derivative(f,x)
-    N(x) = N_map(x, f, ∂f∂x)
-    function N_β!(dx, x, p, n)
-        β = p[1]
-        Nx = N(x[1])
-        dx[1] = Nx - β*f(Nx)/∂f∂x(x[1])
-        return
-    end
-    return N_β!
-end
-
-function beta_map_real_ann(f)
-    ∂f∂x(x) = derivative(f,x)
-    N(x) = N_map(x, f, ∂f∂x)
-    function N_β!(dx, x, p, n)
-        β = p[1]
-        Nx = N(x[1])
-        dx[1] = Nx - β(∂f∂x(x[1]), ∂f∂x(Nx))*f(Nx)/∂f∂x(x[1])
-        return
-    end
-    return N_β!
-end
