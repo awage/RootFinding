@@ -22,6 +22,20 @@ function _get_basins(N, res, ε, max_it; prefix = "basins_", force = false)
     return data
 end
 
+
+function _get_stats(N, Nsamples, grid, ε, max_it; prefix = "stats_", force = false)
+    d = @dict(N, Nsamples, ε, max_it, grid) # parametros
+    data, file = produce_or_load(
+        datadir(""), # path
+        d, # container for parameter
+        compute_stats, # function
+        prefix = prefix, # prefix for savename
+        force = force, # true for forcing sims
+        wsave_kwargs = (;compress = true)
+    )
+    return data
+end
+
 # This is where the iterations are computed until 
 # the stopping criterion is met
 function _get_iterations!(ds, ε, max_it)
@@ -61,7 +75,7 @@ function compute_basins(d)
     mapper_beta = AttractorsViaRecurrences(ds, (xg, yg);
             sparse = true, consecutive_recurrences = 3000
     )
-    xg = yg = range(-2, 2; length = res)
+    xg = yg = range(-1, 1; length = res)
     grid = (xg, yg)
 
     basins = zeros(Int32,res,res); iterations = zeros(Int16,res,res)
@@ -91,6 +105,39 @@ function compute_basins(d)
     return @strdict(grid, basins, iterations, exec_time, attractors, Sb, Sbb, fdim, q)
 end
 
+
+"""
+Compute stats!
+"""
+function compute_stats(d)
+    @unpack N,  Nsamples, ε, max_it, grid = d
+    dim = length(grid)
+    ds = DiscreteDynamicalSystem(N, rand(dim))
+    # iterations = zeros(Int16, Nsamples)
+    # exec_time = zeros(Nsamples)
+    iterations = 0.0
+    exec_time = 0.0
+    nc = 0
+
+    sampler, = statespace_sampler(grid)
+    
+    for k in 1:Nsamples
+        set_state!(ds, sampler())
+        n = @timed _get_iterations!(ds,ε,max_it)
+        if n.value > max_it
+            # the alg. did not converge
+            nc += 1
+        else
+            iterations += n.value
+            exec_time += n.time
+        end
+    end
+    iterations = iterations/(Nsamples - nc)
+    exec_time = exec_time/(Nsamples - nc)
+    nc = nc/Nsamples
+    @show nc, iterations, exec_time
+    return @strdict(grid, Nsamples, iterations, exec_time, nc)
+end
 
 function choose_valid_ic!(ds, max_it, ε) 
  # make sure we pick an IC that converge to a root
