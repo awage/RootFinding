@@ -49,6 +49,8 @@ function print_table_all()
         for k in 1:length(fam_list)
             N = stephenson_map_real(F_list[i], fam_list_real[k])
             d = _get_stats(N, Nsamples, grid, ε, max_it; prefix = string("stats_f", i, "_g",k ), force = force)
+            @unpacl nc, iterations, exec_time = d
+            @show nc, iterations, exec_time
         end
 
         println(io," \\\\")
@@ -75,6 +77,14 @@ function print_table_all()
             n, xf = compute_figure(N, x0, ε, max_it)
             @show Float64(xf[1])
             print(io," & ",  round.(Float64.(xf), digits =2))
+        end
+
+        grid = ntuple(i -> range(-2, 2, length = Nsamples), length(F2_X0[i]))
+        for k in 1:length(fam_list)
+            N = stephenson_map_ndim(F2_list[i], fam_list_real[k], length(F2_X0[i]))
+            d = _get_stats(N, Nsamples, grid, ε, max_it; prefix = string("stats_F2_", i, "_g",k ), force = force)
+            @unpacl nc, iterations, exec_time = d
+            @show nc, iterations, exec_time
         end
         println(io," \\\\")
         end

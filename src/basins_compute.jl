@@ -135,7 +135,7 @@ function compute_stats(d)
     iterations = iterations/(Nsamples - nc)
     exec_time = exec_time/(Nsamples - nc)
     nc = nc/Nsamples
-    @show nc, iterations, exec_time
+    # @show nc, iterations, exec_time
     return @strdict(grid, Nsamples, iterations, exec_time, nc)
 end
 

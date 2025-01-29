@@ -52,8 +52,8 @@ L"f_{14}(x) = (x + sin(2/x)  x^2)"]
     z -> z] 
 
     fam_list_real = [
-    z -> 0.1*tanh(z/0.1), 
-    z -> min(0.1, z), 
+    z -> 1.0*tanh(z/1.0), 
+    z -> min(1., abs(z))*sign(z), 
     z -> z] 
 
 function ∂f(f)
@@ -105,7 +105,7 @@ function stephenson_map_real(f::Function, g::Function)
     function N(x1, p, n)
         # x = x1[1] + im * x1[2]
         x = x1[1]
-        isinf(x) && return SVector(x)
+        isinf(abs(x)) && return SVector(x)
         isnan(u(x)) && return SVector(x)
         x_new =  x - u(x) 
         return SVector(x_new)
