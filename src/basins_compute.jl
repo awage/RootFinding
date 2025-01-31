@@ -23,8 +23,8 @@ function _get_basins(N, res, ε, max_it; prefix = "basins_", force = false)
 end
 
 
-function _get_stats(N, Nsamples, grid, ε, max_it; prefix = "stats_", force = false)
-    d = @dict(N, Nsamples, ε, max_it, grid) # parametros
+function _get_stats(N, f, Nsamples, grid, ε, max_it; prefix = "stats_", force = false)
+    d = @dict(N, f, Nsamples, ε, max_it, grid) # parametros
     data, file = produce_or_load(
         datadir(""), # path
         d, # container for parameter
@@ -38,15 +38,17 @@ end
 
 # This is where the iterations are computed until 
 # the stopping criterion is met
-function _get_iterations!(ds, ε, max_it)
+function _get_iterations!(ds, f, ε, max_it)
     xn_1 = get_state(ds) 
     step!(ds)
+    fx = length(xn_1) > 1 ? map(h -> h(xn_1), f) : f(xn_1[1])
     xn = get_state(ds) 
     k = 1
-    # stopping criterion is ∥x_n - x_{n-1}∥ ≤ ε
-    while norm(xn - xn_1) > ε
+    # stopping criterion is ∥x_n - x_{n-1}∥ + ∥f(x_{n-1})∥ ≤ ε
+    while norm(xn - xn_1) + norm(fx) > ε
         (k > max_it) && break 
         xn_1 = xn
+        fx = length(xn_1) > 1 ? map(h -> h(xn_1), f) : f(xn_1[1])
         step!(ds)
         xn = get_state(ds) 
         k += 1
@@ -110,7 +112,7 @@ end
 Compute stats!
 """
 function compute_stats(d)
-    @unpack N,  Nsamples, ε, max_it, grid = d
+    @unpack N, f,  Nsamples, ε, max_it, grid = d
     dim = length(grid)
     ds = DiscreteDynamicalSystem(N, rand(dim))
     # iterations = zeros(Int16, Nsamples)
@@ -123,7 +125,7 @@ function compute_stats(d)
     
     for k in 1:Nsamples
         set_state!(ds, sampler())
-        n = @timed _get_iterations!(ds,ε,max_it)
+        n = @timed _get_iterations!(ds, f, ε, max_it)
         if n.value > max_it
             # the alg. did not converge
             nc += 1
@@ -132,8 +134,8 @@ function compute_stats(d)
             exec_time += n.time
         end
     end
+    exec_time = exec_time/iterations
     iterations = iterations/(Nsamples - nc)
-    exec_time = exec_time/(Nsamples - nc)
     nc = nc/Nsamples
     # @show nc, iterations, exec_time
     return @strdict(grid, Nsamples, iterations, exec_time, nc)

@@ -1,4 +1,5 @@
 using ForwardDiff: derivative
+using LinearAlgebra
 
 
 function ∂f(f)
@@ -48,9 +49,13 @@ function stephenson_map_real(f::Function, g::Function)
         u(x) = f(x)/d(x)
     function N(x1, p, n)
         x = x1[1]
-        isinf(abs(x)) && return SVector(x)
-        isnan(u(x)) && return SVector(x)
-        x_new =  x - u(x) 
+        fx = f(x); gx = g(fx) 
+        fx_h = f(x + gx)
+        x_new = x - fx*gx/(fx_h - fx)
+        # dx = d(x) 
+        # isinf(abs(x)) && return SVector(x)
+        # isnan(u(x)) && return SVector(x)
+        # x_new =  x - u(x) 
         return SVector(x_new)
     end
     return N
