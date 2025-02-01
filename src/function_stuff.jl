@@ -44,18 +44,13 @@ end
 
 # Generalized Steffenson method real values
 function stephenson_map_real(f::Function, g::Function)
-        h(x) = g(f(x))
-        d(x) = (f(x + h(x)) - f(x))/h(x)
-        u(x) = f(x)/d(x)
     function N(x1, p, n)
         x = x1[1]
-        fx = f(x); gx = g(fx) 
+        # isinf(abs(x)) && return SVector(x)
+        fx = f(x); 
+        gx = g(fx) 
         fx_h = f(x + gx)
         x_new = x - fx*gx/(fx_h - fx)
-        # dx = d(x) 
-        # isinf(abs(x)) && return SVector(x)
-        # isnan(u(x)) && return SVector(x)
-        # x_new =  x - u(x) 
         return SVector(x_new)
     end
     return N
@@ -68,20 +63,8 @@ function stephenson_map_ndim(f::Array{Function}, g::Function, dim::Int)
     G(x, n, k) = setindex!(zeros(dim), g(f[n](x)), k)  
     J(x) = [ (f[n](x .+ G(x, n, k)) - f[n](x))/g(f[n](x)) for n in 1:dim, k in 1:dim] 
     function N(x, p, n)
-        if any(isinf.(abs.(x)))
-            return SVector{dim}(x)
-        end
         fx = map(h -> h(x), f)
-
-        if any(isinf.(abs.(fx)))
-            return SVector{dim}(x)
-        end
         Jx = J(x) 
-        if any(isnan.(Jx)) 
-            Jx[isnan.(Jx)] .= 1.
-        end
-
-        # @show Jx, fx, x
         if 0 < abs(det(Jx)) < Inf 
             x_new =  x - inv(Jx)*fx 
             return SVector{dim}(x_new)

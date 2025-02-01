@@ -45,8 +45,13 @@ function _get_iterations!(ds, f, ε, max_it)
     xn = get_state(ds) 
     k = 1
     # stopping criterion is ∥x_n - x_{n-1}∥ + ∥f(x_{n-1})∥ ≤ ε
-    while norm(xn - xn_1) + norm(fx) > ε
+    while norm(xn - xn_1) + norm(fx) > ε  
         (k > max_it) && break 
+        if any( abs.(xn) .> 100.)
+            # Trajectory diverges 
+            k = max_it + 1 
+            break 
+        end
         xn_1 = xn
         fx = length(xn_1) > 1 ? map(h -> h(xn_1), f) : f(xn_1[1])
         step!(ds)
@@ -114,7 +119,7 @@ Compute stats!
 function compute_stats(d)
     @unpack N, f,  Nsamples, ε, max_it, grid = d
     dim = length(grid)
-    ds = DiscreteDynamicalSystem(N, rand(dim))
+    ds = DiscreteDynamicalSystem(N, big.(rand(dim)))
     # iterations = zeros(Int16, Nsamples)
     # exec_time = zeros(Nsamples)
     iterations = 0.0
@@ -124,7 +129,7 @@ function compute_stats(d)
     sampler, = statespace_sampler(grid)
     
     for k in 1:Nsamples
-        set_state!(ds, sampler())
+        set_state!(ds, big.(sampler()))
         n = @timed _get_iterations!(ds, f, ε, max_it)
         if n.value > max_it
             # the alg. did not converge

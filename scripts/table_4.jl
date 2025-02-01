@@ -24,7 +24,7 @@ function print_table_all()
 
     open("table4_dat.txt","w") do io
     for i in  1:21
-        print(io,L"{\\footnotesize $f_{", i, L"}$}" )
+        print(io,L"{\footnotesize $f_{", i, L"}$}" )
 
         # Iterations
         x0 = big(F_X0[i])
@@ -51,7 +51,7 @@ function print_table_all()
     ## Higher dimension functions
     for i in  1:6
         # println(string_list_benchmark[i])
-        print(io,L"{\\footnotesize $F_", i, L"$}" )
+        print(io,L"{\footnotesize $F_", i, L"$}" )
 
         # Iterations
         @show x0 = BigFloat.(F2_X0[i])
