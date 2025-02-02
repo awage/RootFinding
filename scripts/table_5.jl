@@ -16,7 +16,7 @@ function compute_figure(N, x, ε, max_it)
 end
 
 function print_table_all()
-    ε = 1.e-14;  max_it = 50; force = true; Nsamples = Int(1e3)
+    ε = 1.e-14;  max_it = 50; force = false; Nsamples = Int(1e3)
     setprecision(BigFloat, 50; base = 10)
 
     open("table5_dat.txt","w") do io
@@ -48,8 +48,8 @@ function print_table_all()
     end
 
     ## Higher dimension functions
-    for i in  1:6
-        print(io,L"{\footnotesize f}" )
+    for i in  1:7
+        print(io,L"{\footnotesize $F_{", i, L"$}")
         grid = ntuple(i -> range(-2, 2, length = 10), length(F2_X0[i]))
         for k in 1:length(fam_list)
             N = stephenson_map_ndim(F2_list[i], fam_list_real[k], length(F2_X0[i]))

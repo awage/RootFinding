@@ -41,7 +41,7 @@ function print_table_all()
             N = stephenson_map_real(F_list[i], fam_list_real[k])
             n, xf = compute_figure(N, F_list[i], x0, ε, max_it)
             @show Float64(xf[1])
-            @show Float64(F_list[i](xf[1]))
+            # @show Float64(F_list[i](xf[1]))
             print(io," & ",  round(Float64(xf[1]), digits =1))
         end
 
@@ -49,7 +49,7 @@ function print_table_all()
     end
 
     ## Higher dimension functions
-    for i in  1:6
+    for i in  1:7
         # println(string_list_benchmark[i])
         print(io,L"{\footnotesize $F_", i, L"$}" )
 

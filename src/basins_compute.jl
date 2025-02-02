@@ -47,17 +47,12 @@ function _get_iterations!(ds, f, ε, max_it)
     # stopping criterion is ∥x_n - x_{n-1}∥ + ∥f(x_{n-1})∥ ≤ ε
     while norm(xn - xn_1) + norm(fx) > ε  
         (k > max_it) && break 
-        #if any( abs.(xn) .> 1000.)
-        #    # Trajectory diverges 
-        #    k = max_it + 1 
-        #    break 
-        #end
         xn_1 = xn
         try 
             fx = length(xn_1) > 1 ? map(h -> h(xn_1), f) : f(xn_1[1])
             step!(ds)
         catch 
-            @show x, fx
+            @show xn_1, fx
             k = max_it + 1 
             break 
         end
