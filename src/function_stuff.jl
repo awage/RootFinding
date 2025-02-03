@@ -50,7 +50,7 @@ function stephenson_map_real(f::Function, g::Function)
         gx = g(fx) 
         fx_h = f(x + gx)
         x_new = x - fx*gx/(fx_h - fx)
-        return x_new
+        return [x_new]
     end
     return N
 end

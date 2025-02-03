@@ -150,7 +150,7 @@ function compute_stats(d)
     
     for k in 1:Nsamples
         set_state!(ds, big.(sampler()))
-        n = _get_iterations!(ds, f, ε, max_it)
+        n = @timed _get_iterations!(ds, f, ε, max_it)
         if n.value > max_it
             # the alg. did not converge
             nc += 1
