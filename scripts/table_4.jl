@@ -54,7 +54,7 @@ function print_table_all()
         print(io,L"{\footnotesize $F_", i, L"$}" )
 
         # Iterations
-        @show x0 = BigFloat.(F2_X0[i])
+        x0 = BigFloat.(F2_X0[i])
         for k in 1:length(fam_list)
             N = stephenson_map_ndim(F2_list[i], fam_list_real[k], length(F2_X0[i]))
             n, xf = compute_figure(N, F2_list[i], x0, ε, max_it)
@@ -63,7 +63,7 @@ function print_table_all()
         end
         
         # Final point 
-        @show x0 = BigFloat.(F2_X0[i])
+        x0 = BigFloat.(F2_X0[i])
         for k in 1:length(fam_list)
             N = stephenson_map_ndim(F2_list[i], fam_list_real[k], length(F2_X0[i]))
             n, xf = compute_figure(N, F2_list[i], x0, ε, max_it)

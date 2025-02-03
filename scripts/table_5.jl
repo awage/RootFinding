@@ -16,7 +16,7 @@ function compute_figure(N, x, ε, max_it)
 end
 
 function print_table_all()
-    ε = 1.e-14;  max_it = 50; force = false; Nsamples = Int(1e3)
+    ε = 1.e-14;  max_it = 50; force = true; Nsamples = Int(1e3)
     setprecision(BigFloat, 50; base = 10)
 
     open("table5_dat.txt","w") do io
