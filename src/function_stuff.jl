@@ -44,32 +44,41 @@ end
 
 # Generalized Steffenson method real values
 function stephenson_map_real(f::Function, g::Function)
-    function N(x1, p, n)
+    function N(x1)
         x = x1[1]
-        # isinf(abs(x)) && return SVector(x)
-        fx = f(x); 
+        fx = f(x) 
         gx = g(fx) 
         fx_h = f(x + gx)
         x_new = x - fx*gx/(fx_h - fx)
-        return SVector(x_new)
+        return x_new
     end
     return N
+end
+
+# Evaluate function and jacobian matrix
+function construct_jacobian(x,f,g,d)
+    J = zeros(BigFloat, d,d) 
+    fx = map(h -> h(x), f)
+    G(x, n, k) = setindex!(zeros(BigFloat, d), g(fx[n]), k)  
+    # J(x) = [ (f[n](x .+ G(x, n, k)) - f[n](x))/g(f[n](x)) for n in 1:dim, k in 1:dim] 
+    for n in 1:d, k in 1:d 
+        J[n,k] = (f[n](x .+ G(x, n, k)) - fx[n])/g(fx[n])
+    end
+    return J, fx 
 end
 
 
 # Generate a estimated jacobian function using the same technique for functions
 # from R^k -> R^k._     
 function stephenson_map_ndim(f::Array{Function}, g::Function, dim::Int)
-    G(x, n, k) = setindex!(zeros(dim), g(f[n](x)), k)  
-    J(x) = [ (f[n](x .+ G(x, n, k)) - f[n](x))/g(f[n](x)) for n in 1:dim, k in 1:dim] 
-    function N(x, p, n)
-        fx = map(h -> h(x), f)
-        Jx = J(x) 
+    J(x) = construct_jacobian(x, f, g, dim)
+    function N(x)
+        Jx, fx = J(x) 
         if 0 < abs(det(Jx)) < Inf 
             x_new =  x - inv(Jx)*fx 
-            return SVector{dim}(x_new)
+            return x_new
         else
-            return SVector{dim}(x)
+            return x
         end
     end
     return N

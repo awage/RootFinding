@@ -48,6 +48,10 @@ function print_table_all()
     end
 
     ## Higher dimension functions
+
+
+
+
     for i in  1:7
         print(io,L"{\footnotesize $F_{", i, L"$}")
         grid = ntuple(i -> range(-2, 2, length = 10), length(F2_X0[i]))

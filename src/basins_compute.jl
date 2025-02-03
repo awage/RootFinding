@@ -2,6 +2,24 @@ using Attractors
 using LinearAlgebra:norm
 using ProgressMeter
 
+
+mutable struct FunIterator{T <: Array}
+    N::Function
+    x::T
+end
+
+function step!(fi::FunIterator)
+    fi.x = fi.N(fi.x)
+end
+
+function get_state(fi::FunIterator)
+    return fi.x
+end
+
+function set_state!(fi::FunIterator, x) 
+        fi.x = x
+end
+
 """ 
     function _get_basins(N,i,res,ε,max_it) -> data
 
@@ -120,7 +138,8 @@ Compute stats!
 function compute_stats(d)
     @unpack N, f,  Nsamples, ε, max_it, grid = d
     dim = length(grid)
-    ds = DiscreteDynamicalSystem(N, big.(rand(dim)))
+    # ds = DiscreteDynamicalSystem(N, big.(rand(dim)))
+    ds = FunIterator(N, big.(rand(dim)))
     # iterations = zeros(Int16, Nsamples)
     # exec_time = zeros(Nsamples)
     iterations = 0.0
@@ -131,7 +150,7 @@ function compute_stats(d)
     
     for k in 1:Nsamples
         set_state!(ds, big.(sampler()))
-        n = @timed _get_iterations!(ds, f, ε, max_it)
+        n = _get_iterations!(ds, f, ε, max_it)
         if n.value > max_it
             # the alg. did not converge
             nc += 1
