@@ -63,7 +63,7 @@ function print_table_all()
         for k in 1:length(fam_list)
             N = stephenson_map_ndim(F2_list[i], fam_list_real[k], length(F2_X0[i]))
             n, xf = compute_figure(N, x0, ε, max_it)
-            @show Float64(xf[1])
+            @show Float64.(xf)
             @show Float64(F2_list[i][1](xf))
             print(io," & (",  round(Float64(xf[1]), digits =2), 
                    ",", round(Float64(xf[2]), digits =2), ")")

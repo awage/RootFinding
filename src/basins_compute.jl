@@ -108,7 +108,7 @@ function compute_basins(d)
     mapper_beta = AttractorsViaRecurrences(ds, (xg, yg);
             sparse = true, consecutive_recurrences = 3000
     )
-    xg = yg = range(-1, 1; length = res)
+    xg = yg = range(-1.5, 1.5; length = res)
     grid = (xg, yg)
 
     basins = zeros(Int32,res,res); iterations = zeros(Int16,res,res)

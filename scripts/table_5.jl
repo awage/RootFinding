@@ -16,7 +16,7 @@ function compute_figure(N, x, ε, max_it)
 end
 
 function print_table_all()
-    ε = 1.e-14;  max_it = 50; force = true; Nsamples = Int(1e4)
+    ε = 1.e-14;  max_it = 50; force = false; Nsamples = Int(1e4)
     setprecision(BigFloat, 50; base = 10)
 
     open("table5_dat.txt","w") do io
@@ -38,12 +38,18 @@ function print_table_all()
             print(io," & ",  round(Float64(iterations), digits =1))
         end
 
-        for k in 1:length(fam_list)
+        ex_t = zeros(length(fam_list_real))
+        for k in 1:length(fam_list_real)
             N = stephenson_map_real(F_list[i], fam_list_real[k])
             d = _get_stats(N, F_list[i], Nsamples, grid, ε, max_it; prefix = string("stats_f", i, "_g",k ), force = false)
             @unpack nc, iterations, exec_time = d
-            print(io," & ",  round(Float64(1e6*exec_time), digits =2))
+            ex_t[k] = exec_time
         end
+
+        for k in 1:length(fam_list_real)
+            print(io," & ",  round(Float64(ex_t[k]/ex_t[3]), digits =2))
+        end
+        
         println(io," \\\\")
     end
 
@@ -65,11 +71,15 @@ function print_table_all()
             @unpack  iterations = d
             print(io," & ",  round(Float64(iterations), digits =1))
         end
-        for k in 1:length(fam_list)
+        ex_t = zeros(length(fam_list_real))
+        for k in 1:length(fam_list_real)
             N = stephenson_map_ndim(F2_list[i], fam_list_real[k], length(F2_X0[i]))
             d = _get_stats(N, F2_list[i], Nsamples, grid, ε, max_it; prefix = string("stats_F2_", i, "_g",k ), force = false)
             @unpack  exec_time = d
-            print(io," & ",  round(Float64(1e4*exec_time), digits =1))
+            ex_t[k] = exec_time
+        end
+        for k in 1:length(fam_list_real)
+            print(io," & ",  round(Float64(ex_t[k]/ex_t[3]), digits =2))
         end
         println(io," \\\\")
         end

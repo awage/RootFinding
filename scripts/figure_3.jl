@@ -24,7 +24,7 @@ end
 res = 500; 
 for k in 1:length(fam_list_real)
     N = stephenson_map_ndim(F2_list[7], fam_list_real[k], length(F2_X0[7]))
-        plot_basins(N, res; prefix = string("stephenson_f",7, "_g", k), force = false, shaded = true)
+        plot_basins(N, res; prefix = string("stephenson_f",7, "_g", k), force = true, shaded = true)
 end
 
 
