@@ -44,13 +44,13 @@ end
 
 # Generalized Steffenson method real values
 function stephenson_map_real(f::Function, g::Function)
-    function N(x1)
-        x = x1[1]
+    function N(xx)
+        x = xx[1]
         fx = f(x) 
         gx = g(fx) 
         fx_h = f(x + gx)
         x_new = x - fx*gx/(fx_h - fx)
-        return [x_new]
+        return [x_new], [fx]
     end
     return N
 end
@@ -76,9 +76,9 @@ function stephenson_map_ndim(f::Array{Function}, g::Function, dim::Int)
         Jx, fx = J(x) 
         if 0 < abs(det(Jx)) < Inf 
             x_new =  x - inv(Jx)*fx 
-            return x_new
+            return x_new, fx
         else
-            return x
+            return x, fx
         end
     end
     return N

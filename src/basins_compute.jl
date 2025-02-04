@@ -6,14 +6,21 @@ using ProgressMeter
 mutable struct FunIterator{T <: Array}
     N::Function
     x::T
+    fx::T
 end
 
+function FunIterator(f::Function, x) 
+    _ , fx = f(x)
+    return FunIterator(f, x, fx)
+end
+    
+
 function step!(fi::FunIterator)
-    fi.x = fi.N(fi.x)
+    fi.x, fi.fx = fi.N(fi.x)
 end
 
 function get_state(fi::FunIterator)
-    return fi.x
+    return fi.x, fi.fx
 end
 
 function set_state!(fi::FunIterator, x) 
@@ -56,25 +63,23 @@ end
 
 # This is where the iterations are computed until 
 # the stopping criterion is met
-function _get_iterations!(ds, f, ε, max_it)
-    xn_1 = get_state(ds) 
+function _get_iterations!(ds, ε, max_it)
+    xn_1, fx = get_state(ds) 
     step!(ds)
-    fx = length(xn_1) > 1 ? map(h -> h(xn_1), f) : f(xn_1[1])
-    xn = get_state(ds) 
+    xn, fx = get_state(ds) 
     k = 1
     # stopping criterion is ∥x_n - x_{n-1}∥ + ∥f(x_{n-1})∥ ≤ ε
     while norm(xn - xn_1) + norm(fx) > ε  
         (k > max_it) && break 
         xn_1 = xn
         try 
-            fx = length(xn_1) > 1 ? map(h -> h(xn_1), f) : f(xn_1[1])
             step!(ds)
         catch 
             @show xn_1, fx
             k = max_it + 1 
             break 
         end
-        xn = get_state(ds) 
+        xn, fx = get_state(ds) 
         k += 1
     end
     return k
@@ -94,7 +99,9 @@ are returned into a name dictionnary.
 """
 function compute_basins(d)
     @unpack N,  res, ε, max_it = d
-    ds = DiscreteDynamicalSystem(N, [0.1, 0.2])
+    f = function(x,p,t); y,_ = N(x) ; return SVector{2}(y) end
+    ds = DiscreteDynamicalSystem(f, big.([0.1, 0.2]))
+    di = FunIterator(N, big.([0.1, 0.2]))
     xg = yg = range(-10, 10; length = 20001)
     grid = (xg, yg)
     # We set up a mapper so that we can identify roots automatically  
@@ -108,8 +115,8 @@ function compute_basins(d)
     exec_time = zeros(res,res)
 
 @showprogress for (i,x) in enumerate(xg), (j,y) in enumerate(yg) 
-        set_state!(ds, [x,y])
-        n = @timed _get_iterations!(ds,ε,max_it)
+    set_state!(di, big.([x,y]))
+        n = @timed _get_iterations!(di, ε, max_it)
         if n.value > max_it
             # the alg. did not converge
             basins[i,j] = -1
@@ -125,9 +132,9 @@ function compute_basins(d)
     _,_,fdim = basins_fractal_dimension(basins)
     attractors = extract_attractors(mapper_beta)
      
-    x,y = choose_valid_ic!(ds, max_it, ε) 
-    q = estimate_ACOC!(ds, 200,ε, x, y)
-    
+    # x,y = choose_valid_ic!(ds, max_it, ε) 
+    # q = estimate_ACOC!(ds, 200,ε, x, y)
+    q = 2    
     return @strdict(grid, basins, iterations, exec_time, attractors, Sb, Sbb, fdim, q)
 end
 
@@ -150,7 +157,7 @@ function compute_stats(d)
     
     for k in 1:Nsamples
         set_state!(ds, big.(sampler()))
-        n = @timed _get_iterations!(ds, f, ε, max_it)
+        n = @timed _get_iterations!(ds, ε, max_it)
         if n.value > max_it
             # the alg. did not converge
             nc += 1

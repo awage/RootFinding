@@ -22,44 +22,9 @@ end
 
 # Plot all basins 
 res = 500; 
-for k in 1:14
-    g(z) = 0.05*tanh(abs(z)/0.05)*exp(im*angle(z))
-    N = stephenson_map(func_list[k], g)
-    try
-        plot_basins(N, res; prefix = string("stephensontanh_f",k), force = true, shaded = true)
-    catch 
-        println("ERROR")
-    end
+for k in 1:length(fam_list_real)
+    N = stephenson_map_ndim(F2_list[7], fam_list_real[k], length(F2_X0[7]))
+        plot_basins(N, res; prefix = string("stephenson_f",7, "_g", k), force = false, shaded = true)
+end
 
-
-    gg(z) = min(0.2, abs(z))*exp(im*angle(z))
-    N = stephenson_map(func_list[k], gg)
-    try
-        plot_basins(N, res; prefix = string("stephensontanh_f",k), force = false, shaded = true)
-    catch 
-        println("ERROR")
-    end
-
-    N = stephenson_map(func_list[k], identity)
-    try
-        plot_basins(N, res; prefix = string("stephenson_f",k), force = false, shaded = true)
-    catch 
-        println("ERROR")
-    end
-
-    N = beta_map(func_list[k], 0.)
-    try
-        plot_basins(N, res; prefix = string("Newton_f",k), force = false, shaded = true)
-    catch 
-        println("ERROR")
-    end
-end 
-
-# res = 200
-# f(z) = z^3 - z
-# N = stephenson_map(f)
-# data = _get_basins(N, 0, 0, res, 1e-8, 30; force = true)
-# @unpack basins = data
-# ds = DiscreteDynamicalSystem(N, [0.1, 0.2])
-# z,t = trajectory(ds, 100, rand(2))
 
