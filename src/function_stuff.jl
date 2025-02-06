@@ -1,10 +1,21 @@
 using ForwardDiff: derivative
 using LinearAlgebra
 
-mutable struct FunIterator{T <: Union{Vector{N}, N} where N <: Number}
+"""
+    mutable struct FunIterator{N <: Number}
+
+A mutable struct that facilitates iteration of a function. It stores the function, the current state (`x`),
+and the function value at the current state (`fx`). The type parameter `N` specifies the numeric type of the state.
+
+# Fields
+- `N::Function`: The function to be iterated.  It should take `x` and return a tuple of `(new_x, f(new_x))`.
+- `x::Union{Vector{N}, N}`: The current state of the system (scalar or vector).
+- `fx::Union{Vector{N}, N}`: The function value at the current state (scalar or vector).
+"""
+mutable struct FunIterator{N <: Number}
     N::Function
-    x::T
-    fx::T
+    x::Union{Vector{N}, N}
+    fx::Union{Vector{N}, N}
 end
 
 function FunIterator(f::Function, x) 
@@ -27,6 +38,30 @@ end
 function set_state!(fi::FunIterator, x) 
         fi.x = x
 end
+
+# This is where the iterations are computed until 
+# the stopping criterion is met
+function _get_iterations!(ds, ε, max_it)
+    xn_1, fx = get_state(ds) 
+    step!(ds)
+    xn, fx = get_state(ds) 
+    k = 1
+    # stopping criterion is ∥x_n - x_{n-1}∥ + ∥f(x_{n-1})∥ ≤ ε
+    while norm(xn - xn_1) + norm(fx) > ε  
+        (k > max_it) && break 
+        xn_1 = xn
+        try 
+            step!(ds)
+        catch 
+            k = max_it + 1 
+            break 
+        end
+        xn, fx = get_state(ds) 
+        k += 1
+    end
+    return k
+end
+
 
 function ∂f(f)
 # Warning. This trick works only for holomorphic functions. 
@@ -57,7 +92,6 @@ end
 # Generalized Steffenson method real values
 function stephenson_map(f::Function, g::Function)
     function N(x)
-        # x = xx[1]
         fx = f(x) 
         gx = g(fx) 
         fx_h = f(x + gx)
@@ -71,10 +105,11 @@ end
 function construct_jacobian(x,f,g,d)
     J = zeros(BigFloat, d,d) 
     fx = map(h -> h(x), f)
-    G(x, n, k) = setindex!(zeros(BigFloat, d), g(fx[n]), k)  
+    gx = g.(fx)
+    G(x, n, k) = setindex!(zeros(BigFloat, d), gx[n], k)  
     # J(x) = [ (f[n](x .+ G(x, n, k)) - f[n](x))/g(f[n](x)) for n in 1:dim, k in 1:dim] 
     for n in 1:d, k in 1:d 
-        J[n,k] = (f[n](x .+ G(x, n, k)) - fx[n])/g(fx[n])
+        J[n,k] = (f[n](x .+ G(x, n, k)) - fx[n])/gx[n]
     end
     return J, fx 
 end

@@ -2,6 +2,7 @@ using Attractors
 using LinearAlgebra:norm
 using ProgressMeter
 
+include(srcdir("function_stuff.jl"))
 
 
 """ 
@@ -38,29 +39,6 @@ function _get_stats(N, Nsamples, grid, ε, max_it; prefix = "stats_", force = fa
     return data
 end
 
-# This is where the iterations are computed until 
-# the stopping criterion is met
-function _get_iterations!(ds, ε, max_it)
-    xn_1, fx = get_state(ds) 
-    step!(ds)
-    xn, fx = get_state(ds) 
-    k = 1
-    # stopping criterion is ∥x_n - x_{n-1}∥ + ∥f(x_{n-1})∥ ≤ ε
-    while norm(xn - xn_1) + norm(fx) > ε  
-        (k > max_it) && break 
-        xn_1 = xn
-        try 
-            step!(ds)
-        catch 
-            @show xn_1, fx
-            k = max_it + 1 
-            break 
-        end
-        xn, fx = get_state(ds) 
-        k += 1
-    end
-    return k
-end
 
 
 """
@@ -123,18 +101,20 @@ Compute stats!
 function compute_stats(d)
     @unpack N, Nsamples, ε, max_it, grid = d
     dim = length(grid)
-    # ds = DiscreteDynamicalSystem(N, big.(rand(dim)))
-    ds = FunIterator(N, big.(rand(dim)))
-    # iterations = zeros(Int16, Nsamples)
-    # exec_time = zeros(Nsamples)
+    ds = FunIterator(N, big.(dim == 1 ? rand() : rand(dim)))
     iterations = 0.0
     exec_time = 0.0
     nc = 0
 
     sampler, = statespace_sampler(grid)
-    
+    if dim == 1
+        samp = () -> big(sampler()[1])
+    else
+        samp = () -> big.(sampler())
+    end
+
     for k in 1:Nsamples
-        set_state!(ds, big.(sampler()))
+        set_state!(ds, samp())
         n = @timed _get_iterations!(ds, ε, max_it)
         if n.value > max_it
             # the alg. did not converge
@@ -186,37 +166,6 @@ function  estimate_ACOC!(ds, T, ε, x, y)
     return qn
 end
 
-function _get_mean_it(f, res, ε, max_it; kwargs...)
-    data0 = _get_basins(f, res, ε, max_it; kwargs...)
-    @unpack iterations,basins,  exec_time = data0
-    ind = findall(basins .!= -1)
-    mit = mean(iterations[ind])
-    return  mit
-end
-
-function _get_mean_t0(f, res, ε, max_it; kwargs...)
-    data0 = _get_basins(f, res, ε, max_it; kwargs...)
-    @unpack iterations,basins,  exec_time = data0
-    ind = findall(basins .!= -1)
-    t0_ref = mean(exec_time[ind])
-    return  t0_ref
-end
-
-function _get_mean_nc(f, res, ε, max_it; kwargs...)
-    data0 = _get_basins(f, res, ε, max_it; kwargs...)
-    @unpack iterations,basins,  exec_time = data0
-    ind = findall(basins .!= -1)
-    nc = 1-length(ind)/length(basins)
-    return  nc
-end
-
-function _get_mean_ps(f, i, res, ε, max_it; kwargs...)
-    data0 = _get_basins(f, res, ε, max_it; kwargs...)
-    @unpack iterations,basins,  exec_time = data0
-    ind = findall(basins .!= -1)
-    ps_ref = length(ind)/sum(exec_time[ind])
-    return  ps_ref
-end
 
 function _get_q(N, res, ε, max_it; kwargs...)
     ds = DiscreteDynamicalSystem(N, [0.1, 0.2])

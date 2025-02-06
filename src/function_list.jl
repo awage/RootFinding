@@ -1,15 +1,10 @@
 
-fam_list = [
-z -> 0.2*tanh(abs(z)/0.2)*exp(im*angle(z)), 
-z ->  min(0.2, abs(z))*exp(im*angle(z)), 
-identity] 
-
-fam_list_real = [
+g_list = [
 z -> 0.1*tanh(z), 
-# z -> min(1., abs(z))*sign(z), 
+# z -> 0.1*min(1., abs(z))*sign(z), 
 # z -> 0.1*z*exp(-abs(z)), 
 z -> 0.1*z/(1 + abs(z)), 
-# x -> log(abs(x)+1)*sign(x),
+# x -> 0.1*log(abs(x)+1)*sign(x),
 z -> z]
 
 F_list =[ x -> x^3 - 9x^2 + 28x - 30, 
