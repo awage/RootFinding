@@ -1,6 +1,32 @@
 using ForwardDiff: derivative
 using LinearAlgebra
 
+mutable struct FunIterator{T <: Union{Vector{N}, N} where N <: Number}
+    N::Function
+    x::T
+    fx::T
+end
+
+function FunIterator(f::Function, x) 
+    _ , fx = f(x)
+    return FunIterator(f, x, fx)
+end
+    
+
+function step!(fi::FunIterator)
+    if norm(fi.x) > 1e5
+        throw(DomainError(fi.x, "x is too big"))
+    end
+    fi.x, fi.fx = fi.N(fi.x)
+end
+
+function get_state(fi::FunIterator)
+    return fi.x, fi.fx
+end
+
+function set_state!(fi::FunIterator, x) 
+        fi.x = x
+end
 
 function ∂f(f)
 # Warning. This trick works only for holomorphic functions. 
@@ -27,30 +53,16 @@ function beta_map(f, β)
     return N_β
 end
 
-# Generalized Steffenson method 
-function stephenson_map(f::Function, g::Function)
-        h(z) = g(f(z))
-        d(z) = (f(z + h(z)) - f(z))/h(z)
-        u(z) = f(z)/d(z)
-    function N(z1, p, n)
-        z = z1[1] + im * z1[2]
-        isnan(u(z)) && return SVector(real(z), imag(z))
-        z_new =  z - u(z) 
-        return SVector(real(z_new), imag(z_new))
-    end
-    return N
-end
-
 
 # Generalized Steffenson method real values
-function stephenson_map_real(f::Function, g::Function)
-    function N(xx)
-        x = xx[1]
+function stephenson_map(f::Function, g::Function)
+    function N(x)
+        # x = xx[1]
         fx = f(x) 
         gx = g(fx) 
         fx_h = f(x + gx)
         x_new = x - fx*gx/(fx_h - fx)
-        return [x_new], [fx]
+        return x_new, fx
     end
     return N
 end
@@ -70,7 +82,8 @@ end
 
 # Generate a estimated jacobian function using the same technique for functions
 # from R^k -> R^k._     
-function stephenson_map_ndim(f::Array{Function}, g::Function, dim::Int)
+function stephenson_map(f::Array{Function}, g::Function)
+    dim = length(f)
     J(x) = construct_jacobian(x, f, g, dim)
     function N(x)
         Jx, fx = J(x) 

@@ -3,29 +3,6 @@ using LinearAlgebra:norm
 using ProgressMeter
 
 
-mutable struct FunIterator{T <: Array}
-    N::Function
-    x::T
-    fx::T
-end
-
-function FunIterator(f::Function, x) 
-    _ , fx = f(x)
-    return FunIterator(f, x, fx)
-end
-    
-
-function step!(fi::FunIterator)
-    fi.x, fi.fx = fi.N(fi.x)
-end
-
-function get_state(fi::FunIterator)
-    return fi.x, fi.fx
-end
-
-function set_state!(fi::FunIterator, x) 
-        fi.x = x
-end
 
 """ 
     function _get_basins(N,i,res,ε,max_it) -> data
@@ -48,8 +25,8 @@ function _get_basins(N, res, ε, max_it; prefix = "basins_", force = false)
 end
 
 
-function _get_stats(N, f, Nsamples, grid, ε, max_it; prefix = "stats_", force = false)
-    d = @dict(N, f, Nsamples, ε, max_it, grid) # parametros
+function _get_stats(N, Nsamples, grid, ε, max_it; prefix = "stats_", force = false)
+    d = @dict(N, Nsamples, ε, max_it, grid) # parametros
     data, file = produce_or_load(
         datadir(""), # path
         d, # container for parameter
@@ -100,29 +77,30 @@ are returned into a name dictionnary.
 function compute_basins(d)
     @unpack N,  res, ε, max_it = d
     f = function(x,p,t); y,_ = N(x) ; return SVector{2}(y) end
-    ds = DiscreteDynamicalSystem(f, big.([0.1, 0.2]))
-    di = FunIterator(N, big.([0.1, 0.2]))
+    ds = DiscreteDynamicalSystem(f, big.(rand(2)))
+    di = FunIterator(N, big.(rand(2)))
     xg = yg = range(-10, 10; length = 20001)
     grid = (xg, yg)
     # We set up a mapper so that we can identify roots automatically  
     mapper_beta = AttractorsViaRecurrences(ds, (xg, yg);
             sparse = true, consecutive_recurrences = 3000
     )
-    xg = yg = range(-1.5, 1.5; length = res)
+    xg = yg = range(-2, 2; length = res)
     grid = (xg, yg)
 
     basins = zeros(Int32,res,res); iterations = zeros(Int16,res,res)
     exec_time = zeros(res,res)
 
 @showprogress for (i,x) in enumerate(xg), (j,y) in enumerate(yg) 
-    set_state!(di, big.([x,y]))
+        set_state!(di, big.([x,y]))
         n = @timed _get_iterations!(di, ε, max_it)
         if n.value > max_it
             # the alg. did not converge
             basins[i,j] = -1
         else
             # We identify the root with the mapper.
-            basins[i,j] = mapper_beta([x,y])
+            xf, _ = get_state(di)
+            basins[i,j] = mapper_beta(xf)
         end
         iterations[i,j] = n.value
         exec_time[i,j] = n.time
@@ -143,7 +121,7 @@ end
 Compute stats!
 """
 function compute_stats(d)
-    @unpack N, f,  Nsamples, ε, max_it, grid = d
+    @unpack N, Nsamples, ε, max_it, grid = d
     dim = length(grid)
     # ds = DiscreteDynamicalSystem(N, big.(rand(dim)))
     ds = FunIterator(N, big.(rand(dim)))
@@ -169,7 +147,6 @@ function compute_stats(d)
     exec_time = exec_time/iterations
     iterations = iterations/(Nsamples - nc)
     nc = nc/Nsamples
-    # @show nc, iterations, exec_time
     return @strdict(grid, Nsamples, iterations, exec_time, nc)
 end
 

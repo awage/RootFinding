@@ -19,57 +19,58 @@ function print_table_all()
     setprecision(BigFloat, 50; base = 10)
 
     open("table4_dat.txt","w") do io
-    for i in  1:21
+    for i in  1:25
         print(io,L"{\footnotesize $f_{", i, L"}$}" )
 
         # Iterations
-        x0 = big(F_X0[i])
+        x0 = X0[i]
         for k in 1:length(fam_list)
-            N = stephenson_map_real(F_list[i], fam_list_real[k])
-            n, xf = compute_figure(N, [x0], ε, max_it)
+            N = stephenson_map(F_list[i], fam_list_real[k])
+            n, xf = compute_figure(N, x0, ε, max_it)
             it = n.value
             print(io," & ", it)
         end
         
         # Final point 
-        x0 = big(F_X0[i])
+        x0 = X0[i]
         for k in 1:length(fam_list)
-            N = stephenson_map_real(F_list[i], fam_list_real[k])
-            n, xf = compute_figure(N, [x0], ε, max_it)
-            @show Float64(xf[1])
+            N = stephenson_map(F_list[i], fam_list_real[k])
+            n, xf = compute_figure(N, x0, ε, max_it)
+            @show xf
             # @show Float64(F_list[i](xf[1]))
-            print(io," & ",  round(Float64(xf[1]), digits =1))
+            print(io," & ")
+            for x in xf; print(io, round(Float64(x), digits =1)); end
         end
 
         println(io," \\\\")
     end
 
     ## Higher dimension functions
-    for i in  1:7
-        # println(string_list_benchmark[i])
-        print(io,L"{\footnotesize $F_", i, L"$}" )
+    #for i in  1:7
+    #    # println(string_list_benchmark[i])
+    #    print(io,L"{\footnotesize $F_", i, L"$}" )
 
-        # Iterations
-        x0 = BigFloat.(F2_X0[i])
-        for k in 1:length(fam_list)
-            N = stephenson_map_ndim(F2_list[i], fam_list_real[k], length(F2_X0[i]))
-            n, xf = compute_figure(N, x0, ε, max_it)
-            it = n.value
-            print(io," & ",  it)
-        end
+    #    # Iterations
+    #    x0 = BigFloat.(F2_X0[i])
+    #    for k in 1:length(fam_list)
+    #        N = stephenson_map(F2_list[i], fam_list_real[k])
+    #        n, xf = compute_figure(N, x0, ε, max_it)
+    #        it = n.value
+    #        print(io," & ",  it)
+    #    end
         
-        # Final point 
-        x0 = BigFloat.(F2_X0[i])
-        for k in 1:length(fam_list)
-            N = stephenson_map_ndim(F2_list[i], fam_list_real[k], length(F2_X0[i]))
-            n, xf = compute_figure(N, x0, ε, max_it)
-            @show Float64.(xf)
-            @show Float64(F2_list[i][1](xf))
-            print(io," & (",  round(Float64(xf[1]), digits =2), 
-                   ",", round(Float64(xf[2]), digits =2), ")")
-        end
-        println(io," \\\\")
-        end
+    #    # Final point 
+    #    x0 = BigFloat.(F2_X0[i])
+    #    for k in 1:length(fam_list)
+    #        N = stephenson_map(F2_list[i], fam_list_real[k])
+    #        n, xf = compute_figure(N, x0, ε, max_it)
+    #        @show Float64.(xf)
+    #        @show Float64(F2_list[i][1](xf))
+    #        print(io," & (",  round(Float64(xf[1]), digits =2), 
+    #               ",", round(Float64(xf[2]), digits =2), ")")
+    #    end
+    #    println(io," \\\\")
+    #    end
     end
 end
 
