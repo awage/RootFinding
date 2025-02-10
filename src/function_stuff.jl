@@ -48,6 +48,7 @@ function _get_iterations!(ds, ε, max_it)
     k = 1
     # stopping criterion is ∥x_n - x_{n-1}∥ + ∥f(x_{n-1})∥ ≤ ε
     while norm(xn - xn_1) + norm(fx) > ε  
+# @show norm(xn - xn_1) + norm(fx) 
         (k > max_it) && break 
         xn_1 = xn
         try 
@@ -88,9 +89,17 @@ function beta_map(f, β)
     return N_β
 end
 
+# Barrier function.
+function stephenson_map(f::Function, g::Function, d::Int)
+    if d == 1 
+        return _stephenson_map(f,g)
+    else 
+        return _stephenson_map(f,g,d)
+    end
+end
 
 # Generalized Steffenson method real values
-function stephenson_map(f::Function, g::Function)
+function _stephenson_map(f::Function, g::Function)
     function N(x)
         fx = f(x) 
         gx = g(fx) 
@@ -101,15 +110,46 @@ function stephenson_map(f::Function, g::Function)
     return N
 end
 
+
+# Generalized Steffenson method for R^d → R
+function _stephenson_map(f::Function, g::Function, d)
+    J(x) = construct_gradient(x, f, g, d)
+    function N(x)
+        Jx, fx = J(x) 
+        nJ = norm(Jx) 
+        # @show Float64.(Jx)
+        # @show Float64(fx)
+        # @show Float64.(x)
+        # @show Float64(nJ)
+        if nJ > 0 
+            x_new = x - fx*Jx/nJ^2
+        end
+        return x_new, fx
+    end
+    return N
+end
+
+# Evaluate function and gradient matrix
+function construct_gradient(x, f, g, d)
+    J = zeros(BigFloat, d) 
+    fx = f(x)
+    gx = g(fx)
+    G(k) = setindex!(zeros(BigFloat, d), gx, k)  
+    for  k in 1:d 
+        J[k] = (f(x .+ G(k)) - fx)/gx
+    end
+    return J, fx 
+end
+
 # Evaluate function and jacobian matrix
 function construct_jacobian(x,f,g,d)
-    J = zeros(BigFloat, d,d) 
+    J = zeros(BigFloat, d, d) 
     fx = map(h -> h(x), f)
     gx = g.(fx)
-    G(x, n, k) = setindex!(zeros(BigFloat, d), gx[n], k)  
+    G(n, k) = setindex!(zeros(BigFloat, d), gx[n], k)  
     # J(x) = [ (f[n](x .+ G(x, n, k)) - f[n](x))/g(f[n](x)) for n in 1:dim, k in 1:dim] 
     for n in 1:d, k in 1:d 
-        J[n,k] = (f[n](x .+ G(x, n, k)) - fx[n])/gx[n]
+        J[n,k] = (f[n](x .+ G(n, k)) - fx[n])/gx[n]
     end
     return J, fx 
 end
@@ -117,9 +157,9 @@ end
 
 # Generate a estimated jacobian function using the same technique for functions
 # from R^k -> R^k._     
-function stephenson_map(f::Array{Function}, g::Function)
-    dim = length(f)
-    J(x) = construct_jacobian(x, f, g, dim)
+function stephenson_map(f::Array{Function}, g::Function, d::Int)
+    # dim = length(f)
+    J(x) = construct_jacobian(x, f, g, d)
     function N(x)
         Jx, fx = J(x) 
         if 0 < abs(det(Jx)) < Inf 
