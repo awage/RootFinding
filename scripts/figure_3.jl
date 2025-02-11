@@ -22,7 +22,7 @@ end
 
 
 # Plot all basins 
-res = 300; 
+res = 100; 
 for i in 1:20
 for k in 1:length(g_list)
     F = [ x -> real(F_list[i](x[1]+im*x[2])),  x -> imag(F_list[i](x[1]+im*x[2]))]

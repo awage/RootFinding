@@ -11,8 +11,7 @@ function iterate(ds, x, ε, max_it)
     d = length(x) 
     set_state!(ds, d == 1 ? x[1] : x) 
     n = @timed _get_iterations!(ds, ε, max_it)
-    xf, _ = get_state(ds) 
-    return n, xf
+    return n.value[1], n.time
 end
 
 function print_table_all()
@@ -48,13 +47,13 @@ function print_table_all()
         sampler, = statespace_sampler(grid)
         while k < 500  && cnt < Int(1e4)
             x0 = big.(sampler())
-            n3, _ = iterate(ds[3], x0, ε, max_it)  
-            if n3.value < max_it
-                n2, _ = iterate(ds[2], x0, ε, max_it)  
-                n1, _ = iterate(ds[1], x0, ε, max_it)  
-                t1 += n1.time
-                t2 += n2.time
-                t3 += n3.time
+            n3, dt3 = iterate(ds[3], x0, ε, max_it)  
+            if n3 < max_it
+                n2, dt2 = iterate(ds[2], x0, ε, max_it)  
+                n1, dt1 = iterate(ds[1], x0, ε, max_it)  
+                t1 += dt1
+                t2 += dt2
+                t3 += dt3
                 # @show n1.value, n2.value, n3.value
                 # @show n1.time, n2.time, n3.time
                 k = k + 1

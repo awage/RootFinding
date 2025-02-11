@@ -43,13 +43,15 @@ end
 # the stopping criterion is met
 function _get_iterations!(ds, ε, max_it)
     xn_1, fx = get_state(ds) 
+    yy = Vector{typeof(xn_1)}(undef, max_it + 1)
+    yy[1] = xn_1
     step!(ds)
     xn, fx = get_state(ds) 
     k = 1
     # stopping criterion is ∥x_n - x_{n-1}∥ + ∥f(x_{n-1})∥ ≤ ε
     while norm(xn - xn_1) + norm(fx) > ε  
-# @show norm(xn - xn_1) + norm(fx) 
         (k > max_it) && break 
+        yy[k+1] = xn
         xn_1 = xn
         try 
             step!(ds)
@@ -60,9 +62,8 @@ function _get_iterations!(ds, ε, max_it)
         xn, fx = get_state(ds) 
         k += 1
     end
-    return k
+    return k, yy
 end
-
 
 function ∂f(f)
 # Warning. This trick works only for holomorphic functions. 

@@ -72,7 +72,8 @@ function compute_basins(d)
 @showprogress for (i,x) in enumerate(xg), (j,y) in enumerate(yg) 
         set_state!(di, big.([x,y]))
         n = @timed _get_iterations!(di, ε, max_it)
-        if n.value > max_it
+        it = n.value[1]
+        if it > max_it
             # the alg. did not converge
             basins[i,j] = -1
         else
@@ -80,7 +81,7 @@ function compute_basins(d)
             xf, _ = get_state(di)
             basins[i,j] = mapper_beta(xf)
         end
-        iterations[i,j] = n.value
+        iterations[i,j] = it
         exec_time[i,j] = n.time
     end
 
@@ -116,11 +117,12 @@ function compute_stats(d)
     for k in 1:Nsamples
         set_state!(ds, samp())
         n = @timed _get_iterations!(ds, ε, max_it)
-        if n.value > max_it
+        it = n.value[1]
+        if it > max_it
             # the alg. did not converge
             nc += 1
         else
-            iterations += n.value
+            iterations += it
             exec_time += n.time
         end
     end
@@ -130,14 +132,13 @@ function compute_stats(d)
     return @strdict(grid, Nsamples, iterations, exec_time, nc)
 end
 
-function choose_valid_ic!(ds, max_it, ε) 
+function choose_valid_ic!(ds, max_it, ε, sampler) 
  # make sure we pick an IC that converge to a root
  # with enough iterations (at least 8). 
-     x = 0.; y = 0.; k = 0
+     x = 0.;  k = 0
      while true 
-         x = 4*(rand()-0.5)
-         y = 4*(rand()-0.5)
-         set_state!(ds, [x,y])
+         x = sampler()
+         set_state!(ds, x)
          n = _get_iterations!(ds,ε,max_it)
          if (n < max_it) && (n ≥ 10)
             break
@@ -145,23 +146,16 @@ function choose_valid_ic!(ds, max_it, ε)
          (k < 1000) || break
          k = k + 1
      end
-     return x,y
+     return x 
  end
 
 
 # Estimate order
-function  estimate_ACOC!(ds, T, ε, x, y)
-    yy,t = trajectory(ds, T, [x,y])
-    qn_1 = 10000
-    qn = qn_1 - 1
-    k = 3
-    while norm(yy[k+1] - yy[k]) > ε
-        (k > T-2) && break 
+function  estimate_ACOC!(ds, T, yy)
+    for k in 3:T-2
         num = log(norm(yy[k+1] - yy[k])) - log(norm(yy[k] - yy[k-1])) 
         den = log(norm(yy[k] - yy[k-1]))- log(norm(yy[k-1] - yy[k-2]))
-        qn_1 = qn
         qn = num/den
-        k = k + 1 
     end
     return qn
 end

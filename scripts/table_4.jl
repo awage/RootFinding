@@ -5,16 +5,24 @@ using LaTeXStrings
 using Statistics
 include(srcdir("function_stuff.jl"))
 include(srcdir("function_list.jl"))
+include(srcdir("basins_compute.jl"))
 
 function compute_figure(N, x, ε, max_it)
     ds = FunIterator(N, x)
-    n = @timed _get_iterations!(ds, ε, max_it)
+    n, yy = _get_iterations!(ds, ε, max_it)
     xf, _ = get_state(ds) 
-    return n, xf
+@show n
+    if 5 < n < max_it
+        q = estimate_ACOC!(ds, n, yy)
+    else
+        q = 0
+    end
+@show q
+    return n, xf, q
 end
 
 function print_table_all()
-    ε = 1.e-14;  max_it = 60; 
+    ε = 1e-25;  max_it = 100; 
     setprecision(BigFloat, 50; base = 10)
 
     open("table4_dat.txt","w") do io
@@ -23,21 +31,26 @@ function print_table_all()
 
         # Iterations
         xf_v = []
+        q_v = []
         for k in 1:length(g_list)
             N = stephenson_map(F_list[i], g_list[k], length(X0[i]))
-            n, xf = compute_figure(N, X0[i], ε, max_it)
+            n, xf, q = compute_figure(N, X0[i], ε, max_it)
             @show xf
             push!(xf_v, xf)
-            it = n.value
-            print(io," & ", it)
+            push!(q_v, q)
+            # it = n.value
+            print(io," & ", n)
         end
         
         #  Final point 
          for k in 1:length(g_list)
-             # N = stephenson_map(F_list[i], g_list[k])
-             # n, xf = compute_figure(N, X0[i], ε, max_it)
              print(io," & ")
-             for x in xf_v[k]; print(io, round(Float64(x), digits =1), " "); end
+             for x in xf_v[k]; print(io, round(Float64(x), digits =1), ", "); end
+         end
+
+         # convergence order. 
+         for k in 1:length(g_list)
+             print(io," & ", round(Float64(q_v[k]), digits =1))
          end
 
         println(io," \\\\")
