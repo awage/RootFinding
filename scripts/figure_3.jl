@@ -23,10 +23,10 @@ end
 
 # Plot all basins 
 res = 300; 
-for i in 4:20
-for k in 1:length(fam_list_real)
+for i in 1:20
+for k in 1:length(g_list)
     F = [ x -> real(F_list[i](x[1]+im*x[2])),  x -> imag(F_list[i](x[1]+im*x[2]))]
-    N = stephenson_map(F, fam_list_real[k])
+    N = stephenson_map(F, g_list[k], 2)
     plot_basins(N, res; prefix = string("stephenson_f",i, "_g", k), force = true, shaded = true)
 end
 end

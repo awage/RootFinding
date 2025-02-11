@@ -117,10 +117,6 @@ function _stephenson_map(f::Function, g::Function, d)
     function N(x)
         Jx, fx = J(x) 
         nJ = norm(Jx) 
-        # @show Float64.(Jx)
-        # @show Float64(fx)
-        # @show Float64.(x)
-        # @show Float64(nJ)
         if nJ > 0 
             x_new = x - fx*Jx/nJ^2
         end

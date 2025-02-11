@@ -18,7 +18,7 @@ function print_table_all()
     setprecision(BigFloat, 50; base = 10)
 
     open("table4_dat.txt","w") do io
-    for i in  29
+    for i in 1:28
         print(io,L"{\footnotesize $f_{", i, L"}$}" )
 
         # Iterations

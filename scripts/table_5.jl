@@ -16,7 +16,7 @@ function iterate(ds, x, ε, max_it)
 end
 
 function print_table_all()
-    ε = 1.e-14;  max_it = 50; force = true; Nsamples = Int(1e4)
+    ε = 1.e-14;  max_it = 50; force = false; Nsamples = Int(1e4)
     setprecision(BigFloat, 50; base = 10)
 
     open("table5_dat.txt","w") do io
@@ -26,7 +26,7 @@ function print_table_all()
         it = zeros(length(g_list))
         ex = zeros(length(g_list))
         for k in 1:length(g_list)
-            N = stephenson_map(F_list[i], g_list[k])
+            N = stephenson_map(F_list[i], g_list[k], length(X0[i]))
             d = _get_stats(N, Nsamples, grid, ε, max_it; prefix = string("stats_f", i, "_g",k ), force = force)
             @unpack nc, iterations, exec_time = d
             it[k] = iterations; ex[k] = exec_time
@@ -42,7 +42,7 @@ function print_table_all()
         #     print(io," & ",  round(Float64(ex[k]/ex[3]), digits =1))
         # end
 
-        N = [stephenson_map(F_list[i], g)  for g in g_list]
+        N = [stephenson_map(F_list[i], g, length(X0[i]))  for g in g_list]
         ds = [FunIterator(n, X0[i]) for n in N] 
         t1 = 0.; t2 = 0.; t3 = 0.; k = 0; cnt = 0;
         sampler, = statespace_sampler(grid)
