@@ -16,7 +16,6 @@ end
 
 function print_table_all()
     ε = 1.e-8;  max_it = 100; force = true; Nsamples = Int(1e4)
-    setprecision(BigFloat, 50; base = 10)
 
     open("table5_dat.txt","w") do io
     for i in 1:29
