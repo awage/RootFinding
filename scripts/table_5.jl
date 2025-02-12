@@ -15,7 +15,7 @@ function iterate(ds, x, ε, max_it)
 end
 
 function print_table_all()
-    ε = 1.e-14;  max_it = 100; force = false; Nsamples = Int(1e4)
+    ε = 1.e-14;  max_it = 100; force = true; Nsamples = Int(1e4)
     setprecision(BigFloat, 50; base = 10)
 
     open("table5_dat.txt","w") do io

@@ -1,9 +1,9 @@
 
 g_list = [
-z -> 0.1*tanh(z), 
+z -> max(0.1*tanh(z), 0.5e-8), 
 # z -> 0.1*min(1., abs(z))*sign(z), 
 # z -> 0.1*z*exp(-abs(z)), 
-z -> 0.1*z/(1 + abs(z)), 
+z -> max(0.1*z/(1 + abs(z)),0.5e-8), 
 z -> max(min(1e-8, z), 0.5e-8), 
 # x -> 0.1*log(abs(x)+1)*sign(x),
 z -> z]
