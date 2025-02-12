@@ -140,10 +140,10 @@ end
 
 # Evaluate function and jacobian matrix
 function construct_jacobian(x,f,g,d)
-    J = zeros(BigFloat, d, d) 
+    J = zeros(eltype(x), d, d) 
     fx = map(h -> h(x), f)
     gx = g.(fx)
-    G(n, k) = setindex!(zeros(BigFloat, d), gx[n], k)  
+    G(n, k) = setindex!(zeros(eltype(x), d), gx[n], k)  
     # J(x) = [ (f[n](x .+ G(x, n, k)) - f[n](x))/g(f[n](x)) for n in 1:dim, k in 1:dim] 
     for n in 1:d, k in 1:d 
         J[n,k] = (f[n](x .+ G(n, k)) - fx[n])/gx[n]

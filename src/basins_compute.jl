@@ -55,8 +55,8 @@ are returned into a name dictionnary.
 function compute_basins(d)
     @unpack N,  res, ε, max_it = d
     f = function(x,p,t); y,_ = N(x) ; return SVector{2}(y) end
-    ds = DiscreteDynamicalSystem(f, big.(rand(2)))
-    di = FunIterator(N, big.(rand(2)))
+    ds = DiscreteDynamicalSystem(f, rand(2))
+    di = FunIterator(N, rand(2))
     xg = yg = range(-10, 10; length = 20001)
     grid = (xg, yg)
     # We set up a mapper so that we can identify roots automatically  
@@ -70,7 +70,7 @@ function compute_basins(d)
     exec_time = zeros(res,res)
 
 @showprogress for (i,x) in enumerate(xg), (j,y) in enumerate(yg) 
-        set_state!(di, big.([x,y]))
+        set_state!(di, [x,y])
         n = @timed _get_iterations!(di, ε, max_it)
         it = n.value[1]
         if it > max_it
