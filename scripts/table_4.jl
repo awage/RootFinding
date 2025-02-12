@@ -11,13 +11,11 @@ function compute_figure(N, x, ε, max_it)
     ds = FunIterator(N, x)
     n, yy = _get_iterations!(ds, ε, max_it)
     xf, _ = get_state(ds) 
-@show n
-    if 5 < n < max_it
+    if 5 ≤ n < max_it
         q = estimate_ACOC!(ds, n, yy)
     else
         q = 0
     end
-@show q
     return n, xf, q
 end
 
@@ -44,8 +42,15 @@ function print_table_all()
         
         #  Final point 
          for k in 1:length(g_list)
-             print(io," & ")
+             if length(xf_v[k]) > 1
+                 print(io," & (")
+             else
+                 print(io," & ")
+             end
              for x in xf_v[k]; print(io, round(Float64(x), digits =1), ", "); end
+             if length(xf_v[k]) > 1
+                 print(io,")")
+             end
          end
 
          # convergence order. 

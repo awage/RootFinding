@@ -15,11 +15,11 @@ function iterate(ds, x, ε, max_it)
 end
 
 function print_table_all()
-    ε = 1.e-14;  max_it = 100; force = true; Nsamples = Int(1e4)
+    ε = 1.e-8;  max_it = 100; force = true; Nsamples = Int(1e4)
     setprecision(BigFloat, 50; base = 10)
 
     open("table5_dat.txt","w") do io
-    for i in  1:28
+    for i in 1:29
         print(io,L"{\footnotesize $f_{", i, L"}$}" )
         grid = ntuple(i -> range(-2, 2, length = 10), length(X0[i]))
         it = zeros(length(g_list))
@@ -65,7 +65,6 @@ function print_table_all()
         print(io," & ",  round(Float64(t2/t4), digits =2))
         print(io," & ",  round(Float64(t3/t4), digits =2))
         print(io," & ",  round(Float64(1.), digits =2))
-        
         println(io," \\\\")
     end
 end

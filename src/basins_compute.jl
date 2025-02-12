@@ -102,16 +102,16 @@ Compute stats!
 function compute_stats(d)
     @unpack N, Nsamples, ε, max_it, grid = d
     dim = length(grid)
-    ds = FunIterator(N, big.(dim == 1 ? rand() : rand(dim)))
+    ds = FunIterator(N, dim == 1 ? rand() : rand(dim))
     iterations = 0.0
     exec_time = 0.0
     nc = 0
 
     sampler, = statespace_sampler(grid)
     if dim == 1
-        samp = () -> big(sampler()[1])
+        samp = () -> sampler()[1]
     else
-        samp = () -> big.(sampler())
+        samp = () -> sampler()
     end
 
     for k in 1:Nsamples

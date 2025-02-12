@@ -128,10 +128,10 @@ end
 
 # Evaluate function and gradient matrix
 function construct_gradient(x, f, g, d)
-    J = zeros(BigFloat, d) 
+    J = zeros(eltype(x), d) 
     fx = f(x)
     gx = g(fx)
-    G(k) = setindex!(zeros(BigFloat, d), gx, k)  
+    G(k) = setindex!(zeros(eltype(x), d), gx, k)  
     for  k in 1:d 
         J[k] = (f(x .+ G(k)) - fx)/gx
     end
