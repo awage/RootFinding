@@ -152,6 +152,7 @@ function choose_valid_ic!(ds, max_it, ε, sampler)
 
 # Estimate order
 function  estimate_ACOC!(ds, T, yy)
+    qn = 0.
     for k in 3:T-2
         num = log(norm(yy[k+1] - yy[k])) - log(norm(yy[k] - yy[k-1])) 
         den = log(norm(yy[k] - yy[k-1]))- log(norm(yy[k-1] - yy[k-2]))
