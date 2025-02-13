@@ -1,8 +1,9 @@
+_sign(x) = (x == 0.0) ? 1 : sign(x)
 
 g_list = [
-z -> sign(z)*max(0.1*tanh(abs(z)), 0.5e-8), 
-z -> sign(z)*max(0.1*abs(z)/(1 + abs(z)),0.5e-8), 
-z -> sign(z)*max(min(1e-8, abs(z)), 0.5e-8), 
+z -> _sign(z)*max(0.1*tanh(abs(z)), 0.5e-8), 
+z -> _sign(z)*max(0.1*abs(z)/(1 + abs(z)),0.5e-8), 
+z -> _sign(z)*max(min(1e-8, abs(z)), 0.5e-8), 
 z -> z]
 
 F_list =[ x -> x^3 - 9x^2 + 28x - 30, 

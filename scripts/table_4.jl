@@ -47,7 +47,7 @@ function print_table_all()
              else
                  print(io," & ")
              end
-             for x in xf_v[k]; print(io, round(Float64(x), digits =1), ", "); end
+             for x in xf_v[k]; print(io, round(Float64(x), digits =2), ", "); end
              if length(xf_v[k]) > 1
                  print(io,")")
              end
