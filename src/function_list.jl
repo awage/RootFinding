@@ -1,12 +1,7 @@
 
 g_list = [
-z -> max(0.1*tanh(abs(z)), 0.5e-8), 
-# z -> sign(rand()-0.5)*max(0.1*tanh(abs(z)), 0.5e-8), 
-# z -> if abs(z) > 1 ; 0.1 ; else; 0.5e-8; end, 
-# z -> max(0.1*exp(-abs(z)), 0.5e-8), 
-# z -> max(0.1*sinh(abs(z)), 0.5e-8), 
-# z -> max(0.1*abs(z)/(0.1 + abs(z)),0.5e-8), 
-z -> max(0.1*abs(z)/(1 + abs(z)),0.5e-8), 
+z -> sign(z)*max(0.1*tanh(abs(z)), 0.5e-8), 
+z -> sign(z)*max(0.1*abs(z)/(1 + abs(z)),0.5e-8), 
 z -> sign(z)*max(min(1e-8, abs(z)), 0.5e-8), 
 z -> z]
 
