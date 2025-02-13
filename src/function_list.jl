@@ -1,8 +1,13 @@
 
 g_list = [
 z -> max(0.1*tanh(abs(z)), 0.5e-8), 
+# z -> sign(rand()-0.5)*max(0.1*tanh(abs(z)), 0.5e-8), 
+# z -> if abs(z) > 1 ; 0.1 ; else; 0.5e-8; end, 
+# z -> max(0.1*exp(-abs(z)), 0.5e-8), 
+# z -> max(0.1*sinh(abs(z)), 0.5e-8), 
+# z -> max(0.1*abs(z)/(0.1 + abs(z)),0.5e-8), 
 z -> max(0.1*abs(z)/(1 + abs(z)),0.5e-8), 
-z -> max(min(1e-8, abs(z)), 0.5e-8), 
+z -> sign(z)*max(min(1e-8, abs(z)), 0.5e-8), 
 z -> z]
 
 F_list =[ x -> x^3 - 9x^2 + 28x - 30, 
@@ -42,7 +47,7 @@ F_list =[ x -> x^3 - 9x^2 + 28x - 30,
 F_X0 = [1., 
         0.5, 
         1.5, 
-        2.4, 
+        1., 
         0.6, 
         0.5, 
         1.7, 

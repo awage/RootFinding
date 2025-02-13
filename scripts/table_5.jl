@@ -18,7 +18,7 @@ function print_table_all()
     ε = 1.e-8;  max_it = 100; force = true; Nsamples = Int(1e4)
 
     open("table5_dat.txt","w") do io
-    for i in 1:29
+    for i in 1:28
         print(io,L"{\footnotesize $f_{", i, L"}$}" )
         grid = ntuple(i -> range(-2, 2, length = 10), length(X0[i]))
         it = zeros(length(g_list))
@@ -41,11 +41,11 @@ function print_table_all()
         # end
 
         N = [stephenson_map(F_list[i], g, length(X0[i]))  for g in g_list]
-        ds = [FunIterator(n, X0[i]) for n in N] 
+        ds = [FunIterator(n, Float64.(X0[i])) for n in N] 
         t1 = 0.; t2 = 0.; t3 = 0.; t4 = 0.; k = 0; cnt = 0;
         sampler, = statespace_sampler(grid)
         while k < 500  && cnt < Int(1e4)
-            x0 = big.(sampler())
+            x0 = sampler()
             n4, dt4 = iterate(ds[4], x0, ε, max_it)  
             if n4 < max_it
                 n3, dt3 = iterate(ds[3], x0, ε, max_it)  
