@@ -105,6 +105,9 @@ function _stephenson_map(f::Function, g::Function)
         fx = f(x) 
         gx = g(fx) 
         fx_h = f(x + gx)
+        @show fx, gx, fx_h
+        @show  fx*gx/(fx_h - fx)
+
         x_new = x - fx*gx/(fx_h - fx)
         return x_new, fx
     end
