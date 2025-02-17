@@ -24,7 +24,7 @@ function print_table_all()
     setprecision(BigFloat, 50; base = 10)
 
     open("table4_dat.txt","w") do io
-    for i in 1:28
+    for i in 1:25
         print(io,L"{\footnotesize $f_{", i, L"}$}" )
 
         # Iterations
@@ -44,12 +44,10 @@ function print_table_all()
          for k in 1:length(g_list)
              if length(xf_v[k]) > 1
                  print(io," & (")
-             else
-                 print(io," & ")
-             end
-             for x in xf_v[k]; print(io, round(Float64(x), digits =2), ", "); end
-             if length(xf_v[k]) > 1
+                 for x in xf_v[k]; print(io, round(Float64(x), digits =2), ", "); end
                  print(io,")")
+             else
+              print(io, " & ", round(Float64(xf_v[1]), digits =2)," ");
              end
          end
 
