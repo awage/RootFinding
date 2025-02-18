@@ -26,7 +26,6 @@ end
 # to iterate correctly the system in DynamicalSystems. 
 function wrapper(N!, x) 
     s = State(x,x,x)
-    @show s
     function f(x,p,t); 
          s.x = [x[1], x[2]] 
          N!(s)

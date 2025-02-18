@@ -12,7 +12,7 @@ function compute_figure(N, x, ε, max_it)
     n, yy = _get_iterations!(ds, ε, max_it)
     xf, _ = get_state(ds) 
     if 5 ≤ n < max_it
-        q = estimate_ACOC!(ds, n, yy)
+        q = estimate_ACOC!(n, yy)
     else
         q = 0
     end
