@@ -12,33 +12,43 @@ and the function value at the current state (`fx`). The type parameter `N` speci
 - `x::Union{Vector{N}, N}`: The current state of the system (scalar or vector).
 - `fx::Union{Vector{N}, N}`: The function value at the current state (scalar or vector).
 """
-mutable struct FunIterator{N <: Number}
-    N::Function
+mutable struct State{N <: Number}
     x::Union{Vector{N}, N}
     fx::Union{Vector{N}, N}
+    dfx::Union{Vector{N}, N}
 end
 
+mutable struct FunIterator
+    N!::Function
+    S::State
+end
+
+
 function FunIterator(f::Function, x) 
-    _ , fx = f(x)
-    return FunIterator(f, x, fx)
+    s = State(x, x, x)
+    return FunIterator(f, s)
 end
     
 
 function step!(fi::FunIterator)
-    if norm(fi.x) > 1e5
-        throw(DomainError(fi.x, "x is too big"))
+    if norm(fi.S.x) > 1e5
+        throw(DomainError(fi.S.x, "x is too big"))
     end
-    fi.x, fi.fx = fi.N(fi.x)
+     fi.N!(fi.S)
 end
 
 function get_state(fi::FunIterator)
-    return fi.x, fi.fx
+    return fi.S.x, fi.S.fx
 end
 
 function set_state!(fi::FunIterator, x) 
-        fi.x = x
+        fi.S.x = x
 end
 
+function set_state!(fi::FunIterator, x, fx) 
+        fi.S.x = x
+        fi.S.fx = fx
+end
 # This is where the iterations are computed until 
 # the stopping criterion is met
 function _get_iterations!(ds, ε, max_it)
@@ -101,29 +111,35 @@ end
 
 # Generalized Steffenson method real values
 function _stephenson_map(f::Function, g::Function)
-    function N(x)
+    function N!(S::State)
+        x, fx, dfx = S.x, S.fx, S.dfx
         fx = f(x) 
         gx = g(fx) 
         fx_h = f(x + gx)
-        x_new = x - fx*gx/(fx_h - fx)
-        return x_new, fx
+        dfx = (fx_h - fx)/gx 
+        x = x - fx/dfx
+        S.x = x; S.fx = fx; S.dfx = dfx
+        # return S
     end
-    return N
+    return N!
 end
 
 
 # Generalized Steffenson method for R^d → R
 function _stephenson_map(f::Function, g::Function, d)
     J(x) = construct_gradient(x, f, g, d)
-    function N(x)
+    function N!(S::State)
+        x = S.x
         Jx, fx = J(x) 
         nJ = norm(Jx) 
         if nJ > 0 
             x_new = x - fx*Jx/nJ^2
+        else 
+            x_new = x
         end
-        return x_new, fx
+        S.x = x_new; S.fx = fx
     end
-    return N
+    return N!
 end
 
 # Evaluate function and gradient matrix
@@ -155,30 +171,19 @@ end
 # Generate a estimated jacobian function using the same technique for functions
 # from R^k -> R^k._     
 function stephenson_map(f::Array{Function}, g::Function, d::Int)
-    # dim = length(f)
     J(x) = construct_jacobian(x, f, g, d)
-    function N(x)
+    function N!(S::State)
+        x = S.x
         Jx, fx = J(x) 
         if 0 < abs(det(Jx)) < Inf 
             x_new =  x - inv(Jx)*fx 
-            return x_new, fx
+            S.x = x_new
         else
-            return x, fx
+            S.x = x
         end
+        S.fx = fx
     end
-    return N
+    return N!
 end
 
 
-function stephenson_map_anneal(f::Function, g::Function)
-    function N(x, dfx)
-        fx = f(x) 
-        xhat = x - fx/dfx # newton estimate
-        ̂̂̄fhat = f(xhat) 
-        dfxn = (fhat - fx)/(xhat - x)
-        β = 2*dfx^2/(dfx^2 + dfxn^2)
-        x_new = xhat - beta*fhat/dfx #new update
-        return x_new, fx, dfx
-    end
-    return N
-end
