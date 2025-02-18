@@ -12,8 +12,8 @@ Convenience function to compute and store the basins
 and attractors of the funcion i. with the proximity algorithm
 
 """
-function _get_basins(N, res, ε, max_it; prefix = "basins_", force = false)
-    d = @dict(N, res, ε, max_it) # parametros
+function _get_basins(N, ds, res, ε, max_it; prefix = "basins_", force = false)
+    d = @dict(N, ds, res, ε, max_it) # parametros
     data, file = produce_or_load(
         datadir(""), # path
         d, # container for parameter
@@ -53,9 +53,7 @@ The basins, the iteration matrix, the metrics and the attractors
 are returned into a name dictionnary. 
 """
 function compute_basins(d)
-    @unpack N,  res, ε, max_it = d
-    f = function(x,p,t); y,_ = N(x) ; return SVector{2}(y) end
-    ds = DiscreteDynamicalSystem(f, rand(2))
+    @unpack N, ds, res, ε, max_it = d
     di = FunIterator(N, rand(2))
     xg = yg = range(-10, 10; length = 20001)
     grid = (xg, yg)
@@ -151,7 +149,7 @@ function choose_valid_ic!(ds, max_it, ε, sampler)
 
 
 # Estimate order
-function  estimate_ACOC!(ds, T, yy)
+function  estimate_ACOC!(T, yy)
     qn = 0.
     for k in 3:T-2
         num = log(norm(yy[k+1] - yy[k])) - log(norm(yy[k] - yy[k-1])) 

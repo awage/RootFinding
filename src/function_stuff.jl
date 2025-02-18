@@ -186,4 +186,3 @@ function stephenson_map(f::Array{Function}, g::Function, d::Int)
     return N!
 end
 
-
