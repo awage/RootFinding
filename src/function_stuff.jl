@@ -16,6 +16,7 @@ mutable struct State{N <: Number}
     x::Union{Vector{N}, N}
     fx::Union{Vector{N}, N}
     dfx::Union{Vector{N}, N}
+    beta::N
 end
 
 mutable struct FunIterator
@@ -25,7 +26,7 @@ end
 
 
 function FunIterator(f::Function, x) 
-    s = State(x, x, x)
+    s = State(x, x, x, rand(eltype(x)))
     return FunIterator(f, s)
 end
     
@@ -41,13 +42,23 @@ function get_state(fi::FunIterator)
     return fi.S.x, fi.S.fx
 end
 
-function set_state!(fi::FunIterator, x) 
-        fi.S.x = x
-end
+# function set_state!(fi::FunIterator, x) 
+#         fi.S.x = x
+# end
 
-function set_state!(fi::FunIterator, x, fx) 
-        fi.S.x = x
+function set_state!(fi::FunIterator, x; fx = nothing, dfx = nothing, beta = nothing) 
+    fi.S.x = x
+    if !isnothing(fx)
         fi.S.fx = fx
+    end
+    if !isnothing(dfx)
+        fi.S.dfx = dfx
+    end
+    if !isnothing(beta)
+        fi.S.beta = beta
+    else 
+        fi.S.beta = 1. # default to 1.
+    end
 end
 # This is where the iterations are computed until 
 # the stopping criterion is met
@@ -186,3 +197,18 @@ function stephenson_map(f::Array{Function}, g::Function, d::Int)
     return N!
 end
 
+
+function stephenson_map_anneal(f::Function, g::Function)
+    function N!(S::State)
+        xp, fxp, dfxp = S.x, S.fx, S.dfx
+        beta = S.beta
+        fx = f(xp) 
+        gx = g(fx*beta) 
+        fx_h = f(xp + gx)
+        dfx = (fx_h - fx)/gx 
+        x = xp - fx/dfx
+        S.beta = - 1/dfx
+        S.x = x; S.fx = fx; S.dfx = dfx
+    end
+    return N!
+end

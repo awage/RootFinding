@@ -7,8 +7,7 @@ include(srcdir("function_stuff.jl"))
 include(srcdir("function_list.jl"))
 include(srcdir("basins_compute.jl"))
 
-function compute_figure(N, x, ε, max_it)
-    ds = FunIterator(N, x)
+function compute_figure(ds, ε, max_it)
     n, yy = _get_iterations!(ds, ε, max_it)
     xf, _ = get_state(ds) 
     if 5 ≤ n < max_it
@@ -32,7 +31,8 @@ function print_table_all()
         q_v = []
         for k in 1:length(g_list)
             N = stephenson_map(F_list[i], g_list[k], length(X0[i]))
-            n, xf, q = compute_figure(N, X0[i], ε, max_it)
+            ds = FunIterator(N, X0[i])
+            n, xf, q = compute_figure(ds, ε, max_it)
             @show xf
             push!(xf_v, xf)
             push!(q_v, q)
