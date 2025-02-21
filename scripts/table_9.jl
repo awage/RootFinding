@@ -20,24 +20,26 @@ end
 
 function print_table_all()
     ε = 1e-25;  max_it = 100; 
-    setprecision(BigFloat, 50; base = 10)
+    setprecision(BigFloat, 100; base = 10)
 
-    open("table4_dat.txt","w") do io
+    open("table9_dat.txt","w") do io
     for i in 1:25
-        print(io,L"{\footnotesize $f_{", i, L"}$}" )
+        println(io,L"{\footnotesize $f_{", i, L"}$}" )
 
         # Iterations
         xf_v = []
         q_v = []
         for k in 1:length(g_list)
-            ds = setup_iterator(F_list[i], g_list[k], X0[i]; algtype = :Steffensen)
+            ds = setup_iterator(F_list[i], g_list[k], X0[i]; algtype = :accelerated)
             n, xf, q = compute_figure(ds, ε, max_it)
-            @show xf
+            @show xf,n
+            println(" ---------")
             push!(xf_v, xf)
             push!(q_v, q)
             print(io," & ", n)
         end
         
+        println(io," ")
         #  Final point 
          for k in 1:length(g_list)
              if length(xf_v[k]) > 1
@@ -45,10 +47,11 @@ function print_table_all()
                  for x in xf_v[k]; print(io, round(Float64(x), digits =2), ", "); end
                  print(io,")")
              else
-              print(io, " & ", round(Float64(xf_v[1]), digits =2)," ");
+              print(io, " & ", round(Float64(xf_v[k]), digits =2)," ");
              end
          end
 
+        println(io," ")
          # convergence order. 
          for k in 1:length(g_list)
              print(io," & ", round(Float64(q_v[k]), digits =1))

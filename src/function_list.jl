@@ -1,7 +1,11 @@
 _sign(x) = (x == 0.0) ? 1 : sign(x)
 
 g_list = [
-z -> _sign(z)*max(0.1*tanh(abs(z)), 0.5e-8), 
+z -> tanh(z),
+z -> z/(1 + abs(z)), 
+z -> _sign(z)*max(tanh(abs(z)), 0.5e-8), 
+# z -> 5*tanh(z/5),
+z -> min(abs(z), 1)*_sign(z),
 z -> _sign(z)*max(0.1*abs(z)/(1 + abs(z)),0.5e-8), 
 z -> _sign(z)*max(min(1e-8, abs(z)), 0.5e-8), 
 z -> z]

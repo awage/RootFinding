@@ -18,33 +18,46 @@ function print_table_all()
     ε = 1.e-8;  max_it = 100; force = true; Nsamples = Int(1e4)
 
     open("table8_dat.txt","w") do io
-    for i in 1:18
+    for i in 1:25 
         print(io,L"{\footnotesize $f_{", i, L"}$}" )
-        grid = ntuple(i -> range(-2, 2, length = 10), length(X0[i]))
+        println(io," \\\\")
+        grid = ntuple(i -> range(-10, 10, length = 10), length(X0[i]))
         it = zeros(length(g_list))
         it_a = zeros(length(g_list))
         ex = zeros(length(g_list))
         ex_a = zeros(length(g_list))
         cv = zeros(length(g_list))
         cv_a = zeros(length(g_list))
+
         for k in 1:length(g_list)
-            N = stephenson_map_anneal(F_list[i], g_list[k])
-            d = _get_stats(N, Nsamples, grid, ε, max_it; prefix = string("anneal_stats_f", i, "_g",k ), force = force)
+            ds = setup_iterator(F_list[i], g_list[k], Float64.(X0[i]); algtype = :accelerated)
+            d = _get_stats(ds, Nsamples, grid, ε, max_it; seed = 123,  prefix = string("anneal_stats_f", i, "_g",k ), force = force)
             @unpack nc, iterations, exec_time = d
             it_a[k] = iterations; ex_a[k] = exec_time; cv_a[k] = nc
             @show nc, it_a[k], ex_a[k]
-
-            N = stephenson_map(F_list[i], g_list[k], length(X0[i]))
-            d = _get_stats(N, Nsamples, grid, ε, max_it; prefix = string("stats_f", i, "_g",k ), force = false)
-            @unpack nc, iterations, exec_time = d
-            it[k] = iterations; ex[k] = exec_time; cv[k] = nc
-            print(io," & ",  round(Float64((cv_a[k]-cv[k])*100), digits =1))
-            # print(io," & ",  round(Float64((cv_a[k])*100), digits =1))
+            print(io," & ",  round(Float64((cv_a[k])*100), digits =1))
         end
 
+        println(io," \\\\")
+
         for k in 1:length(g_list)
-            print(io," & ",  round(Float64((it_a[k] - it[k])), digits =1))
-            # print(io," & ",  round(Float64((it_a[k])), digits =1))
+            dim = length(X0[i])
+            ds = setup_iterator(F_list[i], g_list[k], Float64.(X0[i]); algtype = :Steffensen)
+            d = _get_stats(ds, Nsamples, grid, ε, max_it; seed = 123, prefix = string("stats_f", i, "_g",k ), force = force)
+            @unpack nc, iterations, exec_time = d
+            it[k] = iterations; ex[k] = exec_time; cv[k] = nc
+            print(io," & ",  round(Float64((cv[k])*100), digits =1))
+        end
+
+        println(io," \\\\")
+        for k in 1:length(g_list)
+            # print(io," & ",  round(Float64((it_a[k] - it[k])), digits =1))
+            print(io," & ",  round(Float64((it_a[k])), digits =1))
+        end
+
+        println(io," \\\\")
+        for k in 1:length(g_list)
+            print(io," & ",  round(Float64((it[k])), digits =1))
         end
 
         # for k in 1:length(g_list)

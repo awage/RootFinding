@@ -2,75 +2,174 @@ using ForwardDiff: derivative
 using LinearAlgebra
 
 """
-    mutable struct FunIterator{N <: Number}
-
-A mutable struct that facilitates iteration of a function. It stores the function, the current state (`x`),
-and the function value at the current state (`fx`). The type parameter `N` specifies the numeric type of the state.
-
-# Fields
-- `N::Function`: The function to be iterated.  It should take `x` and return a tuple of `(new_x, f(new_x))`.
-- `x::Union{Vector{N}, N}`: The current state of the system (scalar or vector).
-- `fx::Union{Vector{N}, N}`: The function value at the current state (scalar or vector).
+Custum iterator, it returns the state but also the function 
+evaluation. accepts also a variable beta for the accelerated 
+method.
 """
 mutable struct State{N <: Number}
     x::Union{Vector{N}, N}
     fx::Union{Vector{N}, N}
-    dfx::Union{Vector{N}, N}
-    beta::N
+    dfx::Union{Matrix{N}, Vector{N}, N}
 end
 
 mutable struct FunIterator
     N!::Function
+    f::Union{Function, Vector{Function}}
     S::State
 end
 
-
-function FunIterator(f::Function, x) 
-    s = State(x, x, x, rand(eltype(x)))
-    return FunIterator(f, s)
-end
+function setup_iterator(f::Union{Function,Vector{Function}}, g::Function, x; algtype = :Steffensen)
+    N! = if algtype == :Steffensen
+        stephenson_map(f, g, length(x))
+    elseif algtype == :accelerated
+        stephenson_map_anneal(f, g, length(x))
+    else
+        error("Invalid algtype: $algtype. Choose :Steffensen or :accelerated.")
+    end
     
+    fi = FunIterator(N!, f, State(zero(x),zero(x), zero(x)))  
+    set_state!(fi, x)  # Initialize the state
+    return fi
+end
 
+
+"""
+Constructor for FunIterator.  Initializes the State struct.
+"""
+function FunIterator(N!::Function, f, x::Union{Vector{T}, T} where T <: Number; n = length(x), k = 1) # Type restriction for x.
+    fx = isa(f, Vector) ? map(h -> h(x), f) : f(x)
+    dfx = if isa(f, Vector)
+        ones(eltype(x), n, length(f))
+    elseif n == 1
+        one(eltype(x)) # Use one to avoid potential issues with x./x later.
+    else
+        ones(eltype(x), n)
+    end
+    
+    s = State(x, fx, dfx)
+    return FunIterator(N!, f, s)
+end
+
+
+"""
+Performs a single iteration step using the update map (N!).
+"""
 function step!(fi::FunIterator)
     if norm(fi.S.x) > 1e5
-        throw(DomainError(fi.S.x, "x is too big"))
+        throw(DomainError(fi.S.x, "x is too large"))
     end
-     fi.N!(fi.S)
+    fi.N!(fi.S)  # Update the state in-place.
 end
 
-function get_state(fi::FunIterator)
-    return fi.S.x, fi.S.fx
-end
+"""
+Returns the current state (x, f(x)).
+"""
+get_state(fi::FunIterator) = fi.S.x, fi.S.fx
 
-# function set_state!(fi::FunIterator, x) 
-#         fi.S.x = x
-# end
-
-function set_state!(fi::FunIterator, x; fx = nothing, dfx = nothing, beta = nothing) 
+"""
+Sets the state variables x, fx, and dfx.  If fx or dfx are not provided, they are computed.
+"""
+function set_state!(fi::FunIterator, x; fx = nothing, dfx = nothing)
     fi.S.x = x
-    if !isnothing(fx)
+
+    if isnothing(fx)
+        fi.S.fx = isa(fi.f, Vector) ? map(h -> h(x), fi.f) : fi.f(x)
+    else
         fi.S.fx = fx
     end
-    if !isnothing(dfx)
+
+    if isnothing(dfx)
+        n = length(x)
+        if n > 1
+            fi.S.dfx = ones(eltype(x), size(fi.S.dfx))
+        else
+            fi.S.dfx = one(eltype(x)) # More robust way to set to 1. Avoids x./x for x=0
+        end
+    else
         fi.S.dfx = dfx
     end
-    if !isnothing(beta)
-        fi.S.beta = beta
-    else 
-        fi.S.beta = 1. # default to 1.
-    end
 end
+# function setup_iterator(f::Union{Function,Vector{Function}}, g::Function, x; algtype = :Steffensen)
+#     if algtype == :Steffensen
+#         N! = stephenson_map(f, g, length(x))
+#         ds = FunIterator(N!, f, x)
+#         set_state!(ds, x)
+#         return ds
+#     elseif algtype == :accelerated
+#         N! = stephenson_map_anneal(f, g, length(x))
+#         ds = FunIterator(N!, f, x)
+#         set_state!(ds, x)
+#         return ds
+#     else
+#         error("Wrong algtype")
+#     end
+# end
+
+# function FunIterator(N!::Function, f, x; n = length(x) , k = 1) 
+#     if isa(f, Vector)
+#         s = State(x, x, ones(eltype(x), n, length(f)))
+#     else
+#         if n == 1 
+#             s = State(x,x,x)
+#         else
+#             s = State(x, x, ones(eltype(x), n))
+#         end
+#     end
+#     return FunIterator(N!, f, s)
+# end
+    
+
+# function step!(fi::FunIterator)
+#     if norm(fi.S.x) > 1e5
+#         # println("Overflow ", fi.S.x)
+#         throw(DomainError(fi.S.x, "x is too big"))
+#     end
+#      fi.N!(fi.S)
+# end
+
+# function get_state(fi::FunIterator)
+#     return fi.S.x, fi.S.fx
+# end
+
+# function set_state!(fi::FunIterator, x; fx = nothing, dfx = nothing) 
+#     fi.S.x = x
+#     if !isnothing(fx)
+#         fi.S.fx = fx
+#     else
+#         if isa(fi.f,Vector)
+#            fi.S.fx = map(h -> h(x), fi.f)
+#         else
+#             fi.S.fx = fi.f(x)
+#         end
+#     end
+#     if !isnothing(dfx)
+#         fi.S.dfx = dfx
+#     else 
+#         if length(x) > 1 
+#             fi.S.dfx = ones(eltype(x), size(fi.S.dfx))
+#         else
+#             fi.S.dfx = x./x # a way to set to 1 for any type
+#         end
+#     end
+# end
+
 # This is where the iterations are computed until 
 # the stopping criterion is met
 function _get_iterations!(ds, ε, max_it)
     xn_1, fx = get_state(ds) 
     yy = Vector{typeof(xn_1)}(undef, max_it + 1)
     yy[1] = xn_1
-    step!(ds)
+    try
+        step!(ds)
+    catch 
+        @show xn_1
+        return (max_it + 1), yy 
+    end
     xn, fx = get_state(ds) 
     k = 1
     # stopping criterion is ∥x_n - x_{n-1}∥ + ∥f(x_{n-1})∥ ≤ ε
-    while norm(xn - xn_1) + norm(fx) > ε  
+    # while norm(xn - xn_1) + norm(fx) > ε  
+    while  norm(fx) > ε  
         (k > max_it) && break 
         yy[k+1] = xn
         xn_1 = xn
@@ -124,12 +223,12 @@ end
 function _stephenson_map(f::Function, g::Function)
     function N!(S::State)
         x, fx, dfx = S.x, S.fx, S.dfx
-        fx = f(x) 
+        # fx = f(x) 
         gx = g(fx) 
         fx_h = f(x + gx)
         dfx = (fx_h - fx)/gx 
         x = x - fx/dfx
-        S.x = x; S.fx = fx; S.dfx = dfx
+        S.x = x; S.fx = f(x); S.dfx = dfx
         # return S
     end
     return N!
@@ -166,49 +265,92 @@ function construct_gradient(x, f, g, d)
 end
 
 # Evaluate function and jacobian matrix
-function construct_jacobian(x,f,g,d)
+function construct_jacobian(x, fx, f, g, d)
     J = zeros(eltype(x), d, d) 
-    fx = map(h -> h(x), f)
+    # fx = map(h -> h(x), f)
     gx = g.(fx)
     G(n, k) = setindex!(zeros(eltype(x), d), gx[n], k)  
     # J(x) = [ (f[n](x .+ G(x, n, k)) - f[n](x))/g(f[n](x)) for n in 1:dim, k in 1:dim] 
     for n in 1:d, k in 1:d 
         J[n,k] = (f[n](x .+ G(n, k)) - fx[n])/gx[n]
     end
-    return J, fx 
+    return J 
 end
 
 
 # Generate a estimated jacobian function using the same technique for functions
 # from R^k -> R^k._     
 function stephenson_map(f::Array{Function}, g::Function, d::Int)
-    J(x) = construct_jacobian(x, f, g, d)
+    J(x,fx) = construct_jacobian(x, fx, f, g, d)
     function N!(S::State)
-        x = S.x
-        Jx, fx = J(x) 
+        x = S.x; fx = S.fx
+        Jx = J(x,fx) 
         if 0 < abs(det(Jx)) < Inf 
             x_new =  x - inv(Jx)*fx 
             S.x = x_new
         else
             S.x = x
         end
-        S.fx = fx
+        S.fx = map(h -> h(S.x), f)
     end
     return N!
 end
 
+# Barrier function.
+function stephenson_map_anneal(f::Function, g::Function, d::Int)
+    if d == 1 
+        return _stephenson_map_anneal(f,g)
+    else 
+        return _stephenson_map_anneal(f,g,d)
+    end
+end
 
-function stephenson_map_anneal(f::Function, g::Function)
+function _stephenson_map_anneal(f::Function, g::Function)
     function N!(S::State)
         xp, fxp, dfxp = S.x, S.fx, S.dfx
-        beta = S.beta
-        fx = f(xp) 
-        gx = g(fx*beta) 
+        beta = -1/dfxp
+        gx = g(fxp*beta)
         fx_h = f(xp + gx)
-        dfx = (fx_h - fx)/gx 
-        x = xp - fx/dfx
-        S.beta = - 1/dfx
+        dfx = (fx_h - fxp)/gx 
+        x = xp - fxp/dfx
+        fx = f(x)
         S.x = x; S.fx = fx; S.dfx = dfx
+        end
+    return N!
+end
+
+
+
+
+function construct_jacobian(x, fx, Jx, f, g, d)
+    J = zeros(eltype(x), d, d) 
+    # gx = g.(fx)
+    gx = [ g(-fx[n]/Jx[n,k]) for n in 1:d, k in 1:d ]
+
+
+    G(n, k) = setindex!(zeros(eltype(x), d), gx[n,k], k)  
+    # J(x) = [ (f[n](x .+ G(x, n, k)) - f[n](x))/g(f[n](x)) for n in 1:dim, k in 1:dim] 
+    for n in 1:d, k in 1:d 
+        J[n,k] = (f[n](x .+ G(n, k)) - fx[n])/gx[n,k]
+    end
+    return J 
+end
+# Generate a estimated jacobian function using the same technique for functions
+# from R^k -> R^k._     
+function stephenson_map_anneal(f::Array{Function}, g::Function, d::Int)
+    J(x, fx, Jx) = construct_jacobian(x, fx, Jx, f, g, d)
+    function N!(S::State)
+        x = S.x; fx = S.fx; Jx = S.dfx
+        Jx = J(x, fx, Jx) 
+        if 0 < abs(det(Jx)) < Inf 
+            x_new =  x - inv(Jx)*fx 
+            S.x = x_new
+        else
+            S.x = x
+        end
+        S.fx = map(h -> h(S.x), f)
+        S.dfx = Jx
     end
     return N!
 end
+

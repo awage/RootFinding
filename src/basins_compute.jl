@@ -26,8 +26,8 @@ function _get_basins(N, ds, res, ε, max_it; prefix = "basins_", force = false)
 end
 
 
-function _get_stats(N, Nsamples, grid, ε, max_it; prefix = "stats_", force = false)
-    d = @dict(N, Nsamples, ε, max_it, grid) # parametros
+function _get_stats(ds, Nsamples, grid, ε, max_it; seed = 123, prefix = "stats_", force = false)
+    d = @dict(ds, Nsamples, ε, max_it, grid, seed) # parametros
     data, file = produce_or_load(
         datadir(""), # path
         d, # container for parameter
@@ -98,14 +98,14 @@ end
 Compute stats!
 """
 function compute_stats(d)
-    @unpack N, Nsamples, ε, max_it, grid = d
+    @unpack ds, seed, Nsamples, ε, max_it, grid = d
     dim = length(grid)
-    ds = FunIterator(N, dim == 1 ? rand() : rand(dim))
+    # ds = FunIterator(N, dim == 1 ? rand() : rand(dim))
     iterations = 0.0
     exec_time = 0.0
     nc = 0
 
-    sampler, = statespace_sampler(grid)
+    sampler, = statespace_sampler(grid, seed)
     if dim == 1
         samp = () -> sampler()[1]
     else
