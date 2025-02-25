@@ -12,8 +12,8 @@ Convenience function to compute and store the basins
 and attractors of the funcion i. with the proximity algorithm
 
 """
-function _get_basins(N, ds, res, ε, max_it; prefix = "basins_", force = false)
-    d = @dict(N, ds, res, ε, max_it) # parametros
+function _get_basins(ds_it, grid, res, ε, max_it; prefix = "basins_", force = false)
+    d = @dict(ds_it, grid, res, ε, max_it) # parametros
     data, file = produce_or_load(
         datadir(""), # path
         d, # container for parameter
@@ -53,31 +53,26 @@ The basins, the iteration matrix, the metrics and the attractors
 are returned into a name dictionnary. 
 """
 function compute_basins(d)
-    @unpack N, ds, res, ε, max_it = d
-    di = FunIterator(N, rand(2))
-    xg = yg = range(-10, 10; length = 20001)
-    grid = (xg, yg)
-    # We set up a mapper so that we can identify roots automatically  
-    mapper_beta = AttractorsViaRecurrences(ds, (xg, yg);
-            sparse = true, consecutive_recurrences = 3000
-    )
-    xg = yg = range(-2, 2; length = res)
+    @unpack ds_it, grid, res, ε, max_it = d
+    x1, _ =  get_state(ds_it)
+    roots = typeof(x1)[]
+    xg = yg = range(-10, 10; length = res)
     grid = (xg, yg)
 
     basins = zeros(Int32,res,res); iterations = zeros(Int16,res,res)
     exec_time = zeros(res,res)
 
 @showprogress for (i,x) in enumerate(xg), (j,y) in enumerate(yg) 
-        set_state!(di, [x,y])
-        n = @timed _get_iterations!(di, ε, max_it)
+        set_state!(ds_it, [x,y])
+        n = @timed _get_iterations!(ds_it, ε, max_it)
         it = n.value[1]
-        if it > max_it
+        if it ≥ max_it
             # the alg. did not converge
             basins[i,j] = -1
         else
             # We identify the root with the mapper.
-            xf, _ = get_state(di)
-            basins[i,j] = mapper_beta(xf)
+            xf, _ = get_state(ds_it)
+            basins[i,j] = custom_mapper(xf, roots, 0.01)
         end
         iterations[i,j] = it
         exec_time[i,j] = n.time
@@ -85,14 +80,28 @@ function compute_basins(d)
 
     Sb, Sbb = basin_entropy(basins) 
     _,_,fdim = basins_fractal_dimension(basins)
-    attractors = extract_attractors(mapper_beta)
-     
-    # x,y = choose_valid_ic!(ds, max_it, ε) 
-    # q = estimate_ACOC!(ds, 200,ε, x, y)
-    q = 2    
-    return @strdict(grid, basins, iterations, exec_time, attractors, Sb, Sbb, fdim, q)
+    attractors = roots
+    return @strdict(grid, basins, iterations, exec_time, attractors, Sb, Sbb, fdim)
 end
 
+
+function custom_mapper(xf, roots, ε)
+
+    if isempty(roots) 
+        push!(roots, xf) 
+        # @show xf
+    end
+
+    for (k,r) in enumerate(roots)
+        if norm(r .- xf) < ε
+            return k
+        end
+    end
+
+    push!(roots, xf) 
+    # @show xf
+    return length(roots) 
+end
 
 """
 Compute stats!
@@ -116,7 +125,7 @@ function compute_stats(d)
         set_state!(ds, samp())
         n = @timed _get_iterations!(ds, ε, max_it)
         it = n.value[1]
-        if it > max_it
+        if it ≥ max_it
             # the alg. did not converge
             nc += 1
         else

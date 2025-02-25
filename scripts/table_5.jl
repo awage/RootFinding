@@ -18,9 +18,9 @@ function print_table_all()
     ε = 1.e-8;  max_it = 100; force = true; Nsamples = Int(1e4)
 
     open("table5_dat.txt","w") do io
-    for i in 1:25
+    for i in 1:20
         print(io,L"{\footnotesize $f_{", i, L"}$}" )
-        grid = ntuple(i -> range(-10, 10, length = 10), length(X0[i]))
+        grid = ntuple(i -> range(-1, 1, length = 10), length(X0[i]))
         it = zeros(length(g_list))
         ex = zeros(length(g_list))
         for k in 1:length(g_list)

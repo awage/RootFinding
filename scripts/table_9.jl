@@ -23,14 +23,14 @@ function print_table_all()
     setprecision(BigFloat, 100; base = 10)
 
     open("table9_dat.txt","w") do io
-    for i in 1:25
+    for i in 1:20
         println(io,L"{\footnotesize $f_{", i, L"}$}" )
 
         # Iterations
         xf_v = []
         q_v = []
         for k in 1:length(g_list)
-            ds = setup_iterator(F_list[i], g_list[k], X0[i]; algtype = :accelerated)
+            ds = setup_iterator(F_list[i], g_list[k], big.(X0[i]); algtype = :accelerated)
             n, xf, q = compute_figure(ds, ε, max_it)
             @show xf,n
             println(" ---------")
