@@ -18,7 +18,7 @@ function print_table_all()
     ε = 1.e-8;  max_it = 200; force = true; Nsamples = Int(5e3)
 
     open("table8_dat.txt","w") do io
-    for i in 1:20
+    for i in 1:5
         print(io,L"{\footnotesize $f_{", i, L"}$}" )
         println(io," \\\\")
         grid = ntuple(i -> range(-10, 10, length = 10), length(X0[i]))
@@ -29,8 +29,9 @@ function print_table_all()
         cv = zeros(length(g_list))
         cv_a = zeros(length(g_list))
 
-        for k in 1:length(g_list)
-            ds = setup_iterator(F_list[i], g_list[k], X0[i]; algtype = :accelerated)
+        for (k,g) in enumerate(g_list)
+            gg(x) = g(x,ε/2)
+            ds = setup_iterator(F_list[i], gg, X0[i]; algtype = :accelerated)
             d = _get_stats(ds, Nsamples, grid, ε, max_it; seed = 123,  prefix = string("anneal_stats_f", i, "_g",k ), force = force)
             @unpack nc, iterations, exec_time = d
             it_a[k] = iterations; ex_a[k] = exec_time; cv_a[k] = nc
@@ -40,9 +41,9 @@ function print_table_all()
 
         println(io," \\\\")
 
-        for k in 1:length(g_list)
-            dim = length(X0[i])
-            ds = setup_iterator(F_list[i], g_list[k], X0[i]; algtype = :Steffensen)
+        for (k,g) in enumerate(g_list)
+            gg(x) = g(x,ε/2)
+            ds = setup_iterator(F_list[i], gg, X0[i]; algtype = :Steffensen)
             d = _get_stats(ds, Nsamples, grid, ε, max_it; seed = 123, prefix = string("stats_f", i, "_g",k ), force = force)
             @unpack nc, iterations, exec_time = d
             it[k] = iterations; ex[k] = exec_time; cv[k] = nc

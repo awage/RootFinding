@@ -8,8 +8,9 @@ include(srcdir("function_list.jl"))
 include(srcdir("basins_compute.jl"))
 
 function compute_figure(ds, ε, max_it)
+@show     xf, fx = get_state(ds) 
     n, yy = _get_iterations!(ds, ε, max_it)
-    xf, _ = get_state(ds) 
+@show     xf, fx = get_state(ds) 
     if 5 ≤ n < max_it
         q = estimate_ACOC!(n, yy)
     else
@@ -19,45 +20,55 @@ function compute_figure(ds, ε, max_it)
 end
 
 function print_table_all()
-    ε = 1e-25;  max_it = 100; 
+    ε = 1e-25;  max_it = 1000; 
     setprecision(BigFloat, 100; base = 10)
 
     open("table9_dat.txt","w") do io
     for i in 1:20
         println(io,L"{\footnotesize $f_{", i, L"}$}" )
 
-        # Iterations
-        xf_v = []
-        q_v = []
-        for k in 1:length(g_list)
-            ds = setup_iterator(F_list[i], g_list[k], big.(X0[i]); algtype = :accelerated)
-            n, xf, q = compute_figure(ds, ε, max_it)
-            @show xf,n
-            println(" ---------")
-            push!(xf_v, xf)
-            push!(q_v, q)
-            print(io," & ", n)
-        end
-        
-        println(io," ")
-        #  Final point 
-         for k in 1:length(g_list)
-             if length(xf_v[k]) > 1
-                 print(io," & (")
-                 for x in xf_v[k]; print(io, round(Float64(x), digits =2), ", "); end
-                 print(io,")")
-             else
-              print(io, " & ", round(Float64(xf_v[k]), digits =2)," ");
+        for alg in [:Steffensen :accelerated]
+                if alg == :Steffensen
+                    println(io,"& {\\footnotesize (norm.)}" )
+                else 
+                    println(io,"& {\\footnotesize (accel.)}" )
+                end
+            # Iterations
+            xf_v = []
+            q_v = []
+
+            for (k,g) in enumerate(g_list)
+                gg(x) = g(x,ε/2)
+                ds = setup_iterator(F_list[i], gg, big.(X0[i]); algtype = alg)
+                n, xf, q = compute_figure(ds, ε, max_it)
+                @show xf,n
+                println(" ---------")
+                push!(xf_v, xf)
+                push!(q_v, q)
+                print(io," & ", n)
+            end
+            
+            println(io," ")
+            #  Final point 
+             for k in 1:length(g_list)
+                 if length(xf_v[k]) > 1
+                     print(io," & (")
+                     for x in xf_v[k]; print(io, round(Float64(x), digits =2), ", "); end
+                     print(io,")")
+                 else
+                  print(io, " & ", round(Float64(xf_v[k]), digits =2)," ");
+                 end
              end
-         end
 
-        println(io," ")
-         # convergence order. 
-         for k in 1:length(g_list)
-             print(io," & ", round(Float64(q_v[k]), digits =1))
-         end
+            println(io," ")
+             # convergence order. 
+             for k in 1:length(g_list)
+                 print(io," & ", round(Float64(q_v[k]), digits =1))
+             end
 
-        println(io," \\\\")
+            println(io," \\\\")
+
+        end # algtype
     end
 
     end

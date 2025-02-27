@@ -223,6 +223,7 @@ function _stephenson_map_accel(f::Function, g::Function)
         fx_h = f(xp + gx)
         dfx = (fx_h - fxp)/gx 
         x = xp - fxp/dfx
+        # @show xp, fxp, dfx
         fx = f(x)
         S.x = x; S.fx = fx; S.dfx = dfx
         end

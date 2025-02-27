@@ -1,4 +1,4 @@
-using Attractors
+# using Attractors
 using LinearAlgebra:norm
 using ProgressMeter
 
@@ -78,10 +78,10 @@ function compute_basins(d)
         exec_time[i,j] = n.time
     end
 
-    Sb, Sbb = basin_entropy(basins) 
-    _,_,fdim = basins_fractal_dimension(basins)
-    attractors = roots
-    return @strdict(grid, basins, iterations, exec_time, attractors, Sb, Sbb, fdim)
+    # Sb, Sbb = basin_entropy(basins) 
+    # _,_,fdim = basins_fractal_dimension(basins)
+    # attractors = roots
+    return @strdict(grid, basins, iterations, exec_time, roots)
 end
 
 
