@@ -77,7 +77,6 @@ function plot_heatmap(grid, basins, iterations, attractors; ukeys = unique(basin
     ids = 1:length(ukeys)
     replace_dict = Dict(k => i for (i, k) in enumerate(ukeys))
     basins_to_plot = replace(basins.*1., replace_dict...)
-    access = SVector(1,2)
     
     cmap = custom_colormap(ukeys, shaded)
     colors = colors_from_keys(ukeys)
@@ -108,7 +107,7 @@ function plot_heatmap(grid, basins, iterations, attractors; ukeys = unique(basin
         for (i, k) ∈ enumerate(ukeys)
             k ≤ 0 && continue
             A = attractors[k]
-            x, y = columns(A[:, access])
+            x, y = A[:, ]
             scatter!(ax, x, y;
                 color = colors[k], markersize = 20,
                 marker = markers[k],

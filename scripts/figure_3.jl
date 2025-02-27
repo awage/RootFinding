@@ -11,10 +11,10 @@ include("../src/basins_compute.jl")
 
 function plot_basins(ds_it, grid, res, ε = 1e-8, max_it =50; force = false, shaded = true, show_attractors = false, prefix = "stephenson")
     data = _get_basins(ds_it, grid, res, ε, max_it; force, prefix)
-    @unpack basins, iterations, attractors, grid = data
+    @unpack basins, iterations, roots, grid = data
     @show bas_num = unique(basins)
     if  1 < length(bas_num) < 100
-        fig = plot_heatmap(grid, basins, iterations, attractors; ukeys = bas_num, shaded, show_attractors, xticksvisible = false, yticksvisible = false, xticklabelsvisible = false, yticklabelsvisible = false)
+        fig = plot_heatmap(grid, basins, iterations, roots; ukeys = bas_num, shaded, show_attractors, xticksvisible = false, yticksvisible = false, xticklabelsvisible = false, yticklabelsvisible = false)
         s = plotsdir(savename(string(prefix), @dict(res,ε),"png"))
         save(s, fig)
     end

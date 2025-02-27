@@ -1,4 +1,4 @@
-# using Attractors
+using Attractors:statespace_sampler
 using LinearAlgebra:norm
 using ProgressMeter
 
