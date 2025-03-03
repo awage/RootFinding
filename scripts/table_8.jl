@@ -15,10 +15,10 @@ function iterate(ds, x, ε, max_it)
 end
 
 function print_table_all()
-    ε = 1.e-8;  max_it = 200; force = true; Nsamples = Int(5e3)
+    ε = 1.e-8;  max_it = 200; force = true; Nsamples = Int(5e4)
 
     open("table8_dat.txt","w") do io
-    for i in 1:10
+    for i in 1:21
         println(io,L"{\footnotesize $f_{", i, L"}$}" )
 
         grid = ntuple(i -> range(-10, 10, length = 10), length(X0[i]))
@@ -32,10 +32,10 @@ function print_table_all()
                     println(io,"& {\\footnotesize (accel.)}" )
                 end
 
-        for (k,g) in enumerate(g_list)
-            gg(x) = g(x,ε/2)
-            ds = setup_iterator(F_list[i], gg, X0[i]; algtype = alg)
-            d = _get_stats(ds, Nsamples, grid, ε, max_it; seed = 123, prefix = string("stats_", alg, "_f", i, "_g",k ), force = force)
+        ds = [setup_iterator(F_list[i], x -> g(x,ε), X0[i]; algtype = alg) for g in g_list]
+
+        for k in eachindex(g_list)
+            d = _get_stats(ds[k], Nsamples, grid, ε, max_it; seed = 123, prefix = string("stats_", alg, "_f", i, "_g",k ), force = force)
             @unpack nc, iterations, exec_time = d
             it[k] = iterations; ex[k] = exec_time; cv[k] = nc
             print(io," & ",  round(Float64((cv[k])*100), digits =1))
@@ -46,49 +46,43 @@ function print_table_all()
             print(io," & ",  round(Float64((it[k])), digits =1))
         end
 
+        # MEASURE TIMING FOR CONVERGING IC. We select only ic that converges for all functions. 
+        k = 0; cnt = 0;
+        tt = zeros(length(g_list))
+        sampler, = statespace_sampler(grid)
+        while k < 500  && cnt < Int(1e4)
+            x0 = sampler()
+            tm, ex_code = get_timing(ds, x0, ε, max_it) 
+            if ex_code
+                tt .= tt .+ tm
+                k = k  + 1
+            end
+            cnt = cnt  + 1
+        end
+        # @show tt
+
         println(io," ")
         for k in 1:length(g_list)
-            print(io," & ",  round(Float64((ex[k]*1e7)), digits =1))
+            print(io," & ",  round(Float64((tt[k]/tt[length(g_list)])), digits = 2))
         end
-
-
-
-
-        # for k in 1:length(g_list)
-        #     print(io," & ",  round(Float64(ex[k]/ex[3]), digits =1))
-        # end
-
-        # N = [stephenson_map(F_list[i], g, length(X0[i]))  for g in g_list]
-        # ds = [FunIterator(n, Float64.(X0[i])) for n in N] 
-        # t1 = 0.; t2 = 0.; t3 = 0.; t4 = 0.; k = 0; cnt = 0;
-        # sampler, = statespace_sampler(grid)
-        # while k < 500  && cnt < Int(1e4)
-        #     x0 = sampler()
-        #     n4, dt4 = iterate(ds[4], x0, ε, max_it)  
-        #     if n4 < max_it
-        #         n3, dt3 = iterate(ds[3], x0, ε, max_it)  
-        #         n2, dt2 = iterate(ds[2], x0, ε, max_it)  
-        #         n1, dt1 = iterate(ds[1], x0, ε, max_it)  
-        #         t1 += dt1
-        #         t2 += dt2
-        #         t3 += dt3
-        #         t4 += dt4
-        #         k = k + 1
-        #     end
-        #     cnt = cnt + 1
-        # end
-
-        # print(io," & ",  round(Float64(t1/t4), digits =2))
-        # print(io," & ",  round(Float64(t2/t4), digits =2))
-        # print(io," & ",  round(Float64(t3/t4), digits =2))
-        # print(io," & ",  round(Float64(1.), digits =2))
         println(io," \\\\")
     end
     end
 end
 end
 
-print_table_all()
+function get_timing(ds_v, x0, ε, max_it)
+    tt = zeros(length(ds_v))
+    for (k,ds) in enumerate(ds_v) 
+        n, tt[k] = iterate(ds, x0, ε, max_it)
+        if n ≥ max_it
+            return tt, false
+        end
+    end
 
+    return tt, true
+end
+
+print_table_all()
 
 
