@@ -166,9 +166,12 @@ function construct_gradient(x, f, g, d)
     J = zeros(eltype(x), d) 
     fx = f(x)
     gx = g(fx)
-    G(k) = setindex!(zeros(eltype(x), d), gx, k)  
+    # G(k) = setindex!(zeros(eltype(x), d), gx, k)  
+    G = zeros(eltype(x), d)
     for  k in 1:d 
-        J[k] = (f(x .+ G(k)) - fx)/gx
+        G .= 0.0 
+        G[k] = gx
+        J[k] = (f(x .+ G) - fx)/gx
     end
     return J, fx 
 end
@@ -259,9 +262,10 @@ function construct_jacobian(x, fx, Jx, f, g, d)
     end
     return J 
 end
+
 # Generate a estimated jacobian function using the same technique for functions
 # from R^k -> R^k._     
-function stephenson_map_accel(f::Array{Function}, g::Function, d::Int)
+function _stephenson_map_accel(f::Array{Function}, g::Function, d::Int)
     J(x, fx, Jx) = construct_jacobian(x, fx, Jx, f, g, d)
     function N!(S::State)
         x = S.x; fx = S.fx; Jx = S.dfx
@@ -279,3 +283,33 @@ function stephenson_map_accel(f::Array{Function}, g::Function, d::Int)
     return N!
 end
 
+# Generalized Steffenson method for R^d → R
+function _stephenson_map_accel(f::Function, g::Function, d)
+    J(x, dx) = construct_gradient(x, dx, f, g, d)
+    function N!(S::State)
+        x = S.x; fx = S.fx; Jx = S.dfx
+        Jx, fx = J(x, Jx) 
+        nJ = norm(Jx) 
+        if nJ > 0 
+            x_new = x - fx*Jx/nJ^2
+        else 
+            x_new = x
+        end
+        S.x = x_new; S.fx = f(x_new); S.dfx = Jx
+    end
+    return N!
+end
+
+# Evaluate function and gradient matrix
+function construct_gradient(x, dx, f, g, d)
+    J = zeros(eltype(x), d) 
+    fx = f(x)
+    gx = g.(-fx./Jx)
+    G = zeros(eltype(x), d)
+    for  k in 1:d 
+        G .= 0.0 
+        G[k] = gx
+        J[k] = (f(x .+ G) - fx)/gx
+    end
+    return J, fx 
+end
