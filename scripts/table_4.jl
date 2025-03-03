@@ -15,7 +15,7 @@ function iterate(ds, x, ε, max_it)
 end
 
 function print_table_all()
-    ε = 1.e-8;  max_it = 200; force = true; Nsamples = Int(5e4)
+    ε = 1.e-8;  max_it = 200; force = true; Nsamples = Int(5e3)
 
     open("table4_dat.txt","w") do io
     for i in 22:26

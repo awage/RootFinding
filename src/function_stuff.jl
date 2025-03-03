@@ -111,7 +111,7 @@ function _get_iterations!(ds, ε, max_it)
             yy[k] = xn
         end
     catch e
-        # @warn "Iteration failed at step $k: $e" 
+        @warn "Iteration failed at step $k: $e" 
         # @show xn
         return max_it, yy 
     end
@@ -166,7 +166,6 @@ function construct_gradient(x, f, g, d)
     J = zeros(eltype(x), d) 
     fx = f(x)
     gx = g(fx)
-    # G(k) = setindex!(zeros(eltype(x), d), gx, k)  
     G = zeros(eltype(x), d)
     for  k in 1:d 
         G .= 0.0 
@@ -285,10 +284,10 @@ end
 
 # Generalized Steffenson method for R^d → R
 function _stephenson_map_accel(f::Function, g::Function, d)
-    J(x, dx) = construct_gradient(x, dx, f, g, d)
+    J(x, fx, Jx) = construct_gradient(x, fx, Jx, f, g, d)
     function N!(S::State)
         x = S.x; fx = S.fx; Jx = S.dfx
-        Jx, fx = J(x, Jx) 
+        Jx = J(x, fx, Jx) 
         nJ = norm(Jx) 
         if nJ > 0 
             x_new = x - fx*Jx/nJ^2
@@ -301,15 +300,14 @@ function _stephenson_map_accel(f::Function, g::Function, d)
 end
 
 # Evaluate function and gradient matrix
-function construct_gradient(x, dx, f, g, d)
+function construct_gradient(x, fx, Jx, f, g, d)
     J = zeros(eltype(x), d) 
-    fx = f(x)
     gx = g.(-fx./Jx)
     G = zeros(eltype(x), d)
     for  k in 1:d 
         G .= 0.0 
-        G[k] = gx
-        J[k] = (f(x .+ G) - fx)/gx
+        G[k] = gx[k]
+        J[k] = (f(x .+ G) - fx)/gx[k]
     end
-    return J, fx 
+    return J
 end
