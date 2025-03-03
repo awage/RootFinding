@@ -18,48 +18,41 @@ function print_table_all()
     ε = 1.e-8;  max_it = 200; force = true; Nsamples = Int(5e3)
 
     open("table8_dat.txt","w") do io
-    for i in 1:5
-        print(io,L"{\footnotesize $f_{", i, L"}$}" )
-        println(io," \\\\")
+    for i in 1:10
+        println(io,L"{\footnotesize $f_{", i, L"}$}" )
+
         grid = ntuple(i -> range(-10, 10, length = 10), length(X0[i]))
         it = zeros(length(g_list))
-        it_a = zeros(length(g_list))
         ex = zeros(length(g_list))
-        ex_a = zeros(length(g_list))
         cv = zeros(length(g_list))
-        cv_a = zeros(length(g_list))
+        for alg in [:Steffensen :accelerated]
+                if alg == :Steffensen
+                    println(io,"& {\\footnotesize (norm.)}" )
+                else 
+                    println(io,"& {\\footnotesize (accel.)}" )
+                end
 
         for (k,g) in enumerate(g_list)
             gg(x) = g(x,ε/2)
-            ds = setup_iterator(F_list[i], gg, X0[i]; algtype = :accelerated)
-            d = _get_stats(ds, Nsamples, grid, ε, max_it; seed = 123,  prefix = string("anneal_stats_f", i, "_g",k ), force = force)
-            @unpack nc, iterations, exec_time = d
-            it_a[k] = iterations; ex_a[k] = exec_time; cv_a[k] = nc
-            @show nc, it_a[k], ex_a[k]
-            print(io," & ",  round(Float64((cv_a[k])*100), digits =1))
-        end
-
-        println(io," \\\\")
-
-        for (k,g) in enumerate(g_list)
-            gg(x) = g(x,ε/2)
-            ds = setup_iterator(F_list[i], gg, X0[i]; algtype = :Steffensen)
-            d = _get_stats(ds, Nsamples, grid, ε, max_it; seed = 123, prefix = string("stats_f", i, "_g",k ), force = force)
+            ds = setup_iterator(F_list[i], gg, X0[i]; algtype = alg)
+            d = _get_stats(ds, Nsamples, grid, ε, max_it; seed = 123, prefix = string("stats_", alg, "_f", i, "_g",k ), force = force)
             @unpack nc, iterations, exec_time = d
             it[k] = iterations; ex[k] = exec_time; cv[k] = nc
             print(io," & ",  round(Float64((cv[k])*100), digits =1))
         end
 
-        println(io," \\\\")
-        for k in 1:length(g_list)
-            # print(io," & ",  round(Float64((it_a[k] - it[k])), digits =1))
-            print(io," & ",  round(Float64((it_a[k])), digits =1))
-        end
-
-        println(io," \\\\")
+        println(io," ")
         for k in 1:length(g_list)
             print(io," & ",  round(Float64((it[k])), digits =1))
         end
+
+        println(io," ")
+        for k in 1:length(g_list)
+            print(io," & ",  round(Float64((ex[k]*1e7)), digits =1))
+        end
+
+
+
 
         # for k in 1:length(g_list)
         #     print(io," & ",  round(Float64(ex[k]/ex[3]), digits =1))
@@ -90,6 +83,7 @@ function print_table_all()
         # print(io," & ",  round(Float64(t3/t4), digits =2))
         # print(io," & ",  round(Float64(1.), digits =2))
         println(io," \\\\")
+    end
     end
 end
 end
