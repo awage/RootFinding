@@ -18,15 +18,15 @@ mutable struct FunIterator
     S::State
 end
 
-function setup_iterator(f::Union{Function,Vector{Function}}, g::Function, x; algtype = :Steffensen)
-    N! = if algtype == :Steffensen
+function setup_iterator(f::Union{Function,Vector{Function}}, g::Function, x; algtype = :normal)
+    N! = if algtype == :normal
         stephenson_map(f, g, length(x))
     elseif algtype == :accelerated
         stephenson_map_accel(f, g, length(x))
     elseif algtype == :accelerated_secant
         stephenson_map_accel_secant(f, g, length(x))
     else
-        error("Invalid algtype: $algtype. Choose :Steffensen or :accelerated.")
+        error("Invalid algtype: $algtype. Choose :normal or :accelerated.")
     end
     
     fi = FunIterator(N!, f, State(zero(x),zero(x), zero(x)))  
@@ -111,7 +111,7 @@ function _get_iterations!(ds, ε, max_it)
             yy[k] = xn
         end
     catch e
-        @warn "Iteration failed at step $k: $e" 
+        # @warn "Iteration failed at step $k: $e" 
         # @show xn
         return max_it, yy 
     end

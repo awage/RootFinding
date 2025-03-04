@@ -25,8 +25,8 @@ function print_table_all()
         it = zeros(length(g_list))
         ex = zeros(length(g_list))
         cv = zeros(length(g_list))
-        for alg in [:Steffensen :accelerated]
-                if alg == :Steffensen
+        for alg in [:normal :accelerated]
+                if alg == :normal
                     println(io,"& {\\footnotesize (norm.)}" )
                 else 
                     println(io,"& {\\footnotesize (accel.)}" )

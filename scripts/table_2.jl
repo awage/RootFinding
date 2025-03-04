@@ -28,8 +28,8 @@ include("table_3.jl")
     for i in 1:21
         println(io,L"{\footnotesize $f_{", i, L"}$}" )
 
-        for alg in [:Steffensen :accelerated]
-                if alg == :Steffensen
+        for alg in [:normal :accelerated]
+                if alg == :normal
                     println(io,"& {\\footnotesize (norm.)}" )
                 else 
                     println(io,"& {\\footnotesize (accel.)}" )

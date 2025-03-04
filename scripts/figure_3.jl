@@ -22,9 +22,10 @@ end
 
 
 # Plot all basins 
-res = 500
+res = 200
 xg = yg = range(-2, 2; length = res)
 grid = (xg, yg)
+force = false
 ε = 1e-8
 max_it = 150
 for i in 1:14
@@ -33,8 +34,29 @@ for i in 1:14
         gg(x) = g(x,ε/2)
         alg = :accelerated
         ds_it = setup_iterator(F, gg, rand(2); algtype = alg)
-        plot_basins(ds_it, grid, res, ε, max_it;  prefix = string("steffenson", alg, "_f",i, "_g", k), force = true, shaded = true)
+        plot_basins(ds_it, grid, res, ε, max_it;  prefix = string("steffenson_", alg, "_f",i, "_g", k), force , shaded = true)
+    end
+    for (k,g) in enumerate(g_list)
+        F = [ x -> real(F_list[i](x[1]+im*x[2])),  x -> imag(F_list[i](x[1]+im*x[2]))]
+        gg(x) = g(x,ε/2)
+        alg = :normal
+        ds_it = setup_iterator(F, gg, rand(2); algtype = alg)
+        plot_basins(ds_it, grid, res, ε, max_it;  prefix = string("steffenson_", alg, "_f",i, "_g", k), force , shaded = true)
     end
 end
 
 
+for i in [15, 16, 17, 18, 19, 21] 
+    for (k,g) in enumerate(g_list)
+        gg(x) = g(x,ε/2)
+        alg = :accelerated
+        ds_it = setup_iterator(F_list[i], gg, rand(2); algtype = alg)
+        plot_basins(ds_it, grid, res, ε, max_it;  prefix = string("steffenson_", alg, "_f",i, "_g", k), force , shaded = true)
+    end
+    for (k,g) in enumerate(g_list)
+        gg(x) = g(x,ε/2)
+        alg = :normal
+        ds_it = setup_iterator(F_list[i], gg, rand(2); algtype = alg)
+        plot_basins(ds_it, grid, res, ε, max_it;  prefix = string("steffenson_", alg, "_f",i, "_g", k), force , shaded = true)
+    end
+end
