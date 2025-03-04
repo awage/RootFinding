@@ -15,13 +15,13 @@ function iterate(ds, x, ε, max_it)
 end
 
 function print_table_all()
-    ε = 1.e-8;  max_it = 200; force = true; Nsamples = Int(5e3)
+    ε = 1.e-8;  max_it = 200; force = false; Nsamples = Int(5e4)
 
     open("table4_dat.txt","w") do io
-    for i in 22:26
-        println(io,L"{\footnotesize $f_{", i, L"}$}" )
+    for i in 1:5
+        println(io,"{\\footnotesize ", optim_flist[i], "}" )
 
-        grid = ntuple(i -> range(-10, 10, length = 10), length(X0[i]))
+        grid = ntuple(i -> range(-10, 10, length = 10), length(X0_optim[i]))
         it = zeros(length(g_list))
         ex = zeros(length(g_list))
         cv = zeros(length(g_list))
@@ -32,7 +32,7 @@ function print_table_all()
                     println(io,"& {\\footnotesize (accel.)}" )
                 end
 
-        ds = [setup_iterator(F_list[i], x -> g(x,ε), X0[i]; algtype = alg) for g in g_list]
+        ds = [setup_iterator(optim_f[i], x -> g(x,ε), X0_optim[i]; algtype = alg) for g in g_list]
 
         for k in eachindex(g_list)
             d = _get_stats(ds[k], Nsamples, grid, ε, max_it; seed = 123, prefix = string("stats_", alg, "_f", i, "_g",k ), force = force)
@@ -59,13 +59,13 @@ function print_table_all()
             end
             cnt = cnt  + 1
         end
-        # @show tt
 
         println(io," ")
         for k in 1:length(g_list)
             print(io," & ",  round(Float64((tt[k]/tt[length(g_list)])), digits = 2))
         end
         println(io," \\\\")
+        println(io," \\hline")
     end
     end
 end

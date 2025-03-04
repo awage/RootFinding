@@ -289,7 +289,6 @@ function _stephenson_map_accel(f::Function, g::Function, d)
         x = S.x; fx = S.fx; Jx = S.dfx
         Jx = J(x, fx, Jx) 
         nJ = norm(Jx) 
-        # @show x, fx, Jx, nJ
         if nJ > 0 
             x_new = x - fx*Jx/nJ^2
         else 
