@@ -42,6 +42,6 @@ setprecision(BigFloat, 50; base = 10)
 
 g(x) = g_list[1](x,ε)
 
-ds = setup_iterator(F_list[26], g, X0[26]; algtype = :accelerated)
-
-@show n, t = iterate(ds, X0[26], 1e-8, 100)
+ds = setup_iterator(F_list[23], g, X0[23]; algtype = :accelerated)
+# ds = setup_iterator(F_list[23], g, X0[23]; algtype = :Steffensen)
+@show n, t = iterate(ds, X0[23], 1e-8, 10000)
