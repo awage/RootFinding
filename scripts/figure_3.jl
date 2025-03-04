@@ -22,7 +22,7 @@ end
 
 
 # Plot all basins 
-res = 250; 
+res = 500
 xg = yg = range(-2, 2; length = res)
 grid = (xg, yg)
 ε = 1e-8

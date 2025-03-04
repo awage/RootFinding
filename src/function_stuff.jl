@@ -209,7 +209,7 @@ function stephenson_map(f::Array{Function}, g::Function, d::Int)
 end
 
 # Barrier function.
-function stephenson_map_accel(f::Function, g::Function, d::Int)
+function stephenson_map_accel(f::Union{Function, Array{Function}}, g::Function, d::Int)
     if d == 1 
         return _stephenson_map_accel(f,g)
     else 
