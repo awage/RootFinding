@@ -98,7 +98,7 @@ end
 
 # This is where the iterations are computed until 
 # the stopping criterion is met
-function _get_iterations!(ds, ε, max_it)
+function get_iterations!(ds, ε, max_it)
     xn, fx = get_state(ds) 
     yy = Vector{typeof(xn)}(undef, max_it + 1)
     yy[1] = xn

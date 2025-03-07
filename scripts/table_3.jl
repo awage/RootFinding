@@ -10,15 +10,15 @@ include(srcdir("basins_compute.jl"))
 function iterate(ds, x, ε, max_it)
     d = length(x) 
     set_state!(ds, d == 1 ? x[1] : x) 
-    n = @timed _get_iterations!(ds, ε, max_it)
+    n = @timed get_iterations!(ds, ε, max_it)
     return n.value[1], n.time
 end
 
 function print_table_all()
-    ε = 1.e-8;  max_it = 200; force = true; Nsamples = Int(5e4)
+    ε = 1.e-8;  max_it = 200; force = true; Nsamples = Int(5e2)
 
     open("table3_dat.txt","w") do io
-    for i in 1:21
+    for i in 16:21
         println(io,L"{\footnotesize $f_{", i, L"}$}" )
 
         grid = ntuple(i -> range(-10, 10, length = 10), length(X0[i]))
@@ -35,7 +35,7 @@ function print_table_all()
         ds = [setup_iterator(F_list[i], x -> g(x,ε), X0[i]; algtype = alg) for g in g_list]
 
         for k in eachindex(g_list)
-            d = _get_stats(ds[k], Nsamples, grid, ε, max_it; seed = 123, prefix = string("stats_", alg, "_f", i, "_g",k ), force = force)
+            d = get_stats(ds[k], Nsamples, grid, ε, max_it; seed = 123, prefix = string("stats_", alg, "_f", i, "_g",k ), force = force)
             @unpack nc, iterations, exec_time = d
             it[k] = iterations; ex[k] = exec_time; cv[k] = nc
             print(io," & ",  round(Float64((cv[k])*100), digits =1))

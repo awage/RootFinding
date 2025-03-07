@@ -26,7 +26,7 @@ function _get_basins(ds_it, grid, res, ε, max_it; prefix = "basins_", force = f
 end
 
 
-function _get_stats(ds, Nsamples, grid, ε, max_it; seed = 123, prefix = "stats_", force = false)
+function get_stats(ds, Nsamples, grid, ε, max_it; seed = 123, prefix = "stats_", force = false)
     d = @dict(ds, Nsamples, ε, max_it, grid, seed) # parametros
     data, file = produce_or_load(
         datadir(""), # path
@@ -64,7 +64,7 @@ function compute_basins(d)
 
 @showprogress for (i,x) in enumerate(xg), (j,y) in enumerate(yg) 
         set_state!(ds_it, [x,y])
-        n = @timed _get_iterations!(ds_it, ε, max_it)
+        n = @timed get_iterations!(ds_it, ε, max_it)
         it = n.value[1]
         if it ≥ max_it
             # the alg. did not converge
@@ -123,7 +123,7 @@ function compute_stats(d)
 
     for k in 1:Nsamples
         set_state!(ds, samp())
-        n = @timed _get_iterations!(ds, ε, max_it)
+        n = @timed get_iterations!(ds, ε, max_it)
         it = n.value[1]
         if it ≥ max_it
             # the alg. did not converge
@@ -139,22 +139,22 @@ function compute_stats(d)
     return @strdict(grid, Nsamples, iterations, exec_time, nc)
 end
 
-function choose_valid_ic!(ds, max_it, ε, sampler) 
- # make sure we pick an IC that converge to a root
- # with enough iterations (at least 8). 
-     x = 0.;  k = 0
-     while true 
-         x = sampler()
-         set_state!(ds, x)
-         n = _get_iterations!(ds,ε,max_it)
-         if (n < max_it) && (n ≥ 10)
-            break
-         end
-         (k < 1000) || break
-         k = k + 1
-     end
-     return x 
- end
+# function choose_valid_ic!(ds, max_it, ε, sampler) 
+#  # make sure we pick an IC that converge to a root
+#  # with enough iterations (at least 8). 
+#      x = 0.;  k = 0
+#      while true 
+#          x = sampler()
+#          set_state!(ds, x)
+#          n = get_iterations!(ds,ε,max_it)
+#          if (n < max_it) && (n ≥ 10)
+#             break
+#          end
+#          (k < 1000) || break
+#          k = k + 1
+#      end
+#      return x 
+#  end
 
 
 # Estimate order
@@ -169,12 +169,12 @@ function  estimate_ACOC!(T, yy)
 end
 
 
-function _get_q(N, res, ε, max_it; kwargs...)
-    ds = DiscreteDynamicalSystem(N, [0.1, 0.2])
-    x,y = choose_valid_ic!(ds, max_it, ε) 
-    q = estimate_ACOC!(ds, 200,ε, x, y)
-    return  q
-end
+# function _get_q(N, res, ε, max_it; kwargs...)
+#     ds = DiscreteDynamicalSystem(N, [0.1, 0.2])
+#     x,y = choose_valid_ic!(ds, max_it, ε) 
+#     q = estimate_ACOC!(ds, 200,ε, x, y)
+#     return  q
+# end
 
 
 # This small functions sets a color gradient between red and green depending 

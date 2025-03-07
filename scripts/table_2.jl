@@ -9,7 +9,7 @@ include(srcdir("basins_compute.jl"))
 
 function compute_figure(ds, ε, max_it)
 @show     xf, fx = get_state(ds) 
-    n, yy = _get_iterations!(ds, ε, max_it)
+    n, yy = get_iterations!(ds, ε, max_it)
 @show     xf, fx = get_state(ds) 
     if 5 ≤ n < max_it
         q = estimate_ACOC!(n, yy)
@@ -24,7 +24,6 @@ function print_table_all()
     setprecision(BigFloat, 100; base = 10)
 
     open("table2_dat.txt","w") do io
-include("table_3.jl")
     for i in 1:21
         println(io,L"{\footnotesize $f_{", i, L"}$}" )
 
