@@ -4,7 +4,7 @@ using CairoMakie
 using CodecZlib
 using LaTeXStrings
 using Statistics:mean
-include("../src/function_stuff.jl")
+include("../src/function_stuff_gem.jl")
 include("../src/function_list.jl")
 include("../src/color_stuff.jl")
 include("../src/basins_compute.jl")
@@ -25,10 +25,10 @@ end
 res = 200
 xg = yg = range(-2, 2; length = res)
 grid = (xg, yg)
-force = false
+force = true
 ε = 1e-8
 max_it = 150
-for i in 1:14
+for i in [1,9]
     for (k,g) in enumerate(g_list)
         F = [ x -> real(F_list[i](x[1]+im*x[2])),  x -> imag(F_list[i](x[1]+im*x[2]))]
         gg(x) = g(x,ε/2)
@@ -46,7 +46,7 @@ for i in 1:14
 end
 
 
-for i in [15, 16, 17, 18, 19, 21] 
+for i in [15, 18] 
     for (k,g) in enumerate(g_list)
         gg(x) = g(x,ε/2)
         alg = :accelerated

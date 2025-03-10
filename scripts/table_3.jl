@@ -3,7 +3,7 @@ using DrWatson
 using CodecZlib
 using LaTeXStrings
 using Statistics
-include(srcdir("function_stuff.jl"))
+include(srcdir("function_stuff_gem.jl"))
 include(srcdir("function_list.jl"))
 include(srcdir("basins_compute.jl"))
 
