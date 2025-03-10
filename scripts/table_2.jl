@@ -3,7 +3,8 @@ using DrWatson
 using CodecZlib
 using LaTeXStrings
 using Statistics
-include(srcdir("function_stuff.jl"))
+# include(srcdir("function_stuff.jl"))
+include(srcdir("function_stuff_gem.jl"))
 include(srcdir("function_list.jl"))
 include(srcdir("basins_compute.jl"))
 
@@ -38,8 +39,8 @@ function print_table_all()
             q_v = []
 
             for (k,g) in enumerate(g_list)
-                gg(x) = g(x,ε/2)
-                ds = setup_iterator(F_list[i], gg, big.(X0[i]); algtype = alg)
+                g_eps(x) = g(x,ε/2)
+                ds = setup_iterator(F_list[i], g_eps, big.(X0[i]); algtype = alg)
                 n, xf, q = compute_figure(ds, ε, max_it)
                 @show xf,n
                 println(" ---------")

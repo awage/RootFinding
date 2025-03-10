@@ -2,7 +2,8 @@ using Attractors:statespace_sampler
 using LinearAlgebra:norm
 using ProgressMeter
 
-include(srcdir("function_stuff.jl"))
+# include(srcdir("function_stuff.jl"))
+include(srcdir("function_stuff_gem.jl"))
 
 
 """ 
