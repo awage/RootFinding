@@ -15,10 +15,10 @@ function iterate(ds, x, ε, max_it)
 end
 
 function print_table_all()
-    ε = 1.e-8;  max_it = 200; force = true; Nsamples = Int(5e2)
+    ε = 1.e-8;  max_it = 200; force = true; Nsamples = Int(5e4)
 
     open("table3_dat.txt","w") do io
-    for i in 16:21
+    for i in 1:21
         println(io,L"{\footnotesize $f_{", i, L"}$}" )
 
         grid = ntuple(i -> range(-10, 10, length = 10), length(X0[i]))
