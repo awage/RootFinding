@@ -152,18 +152,18 @@ function get_iterations!(fi::FunIterator, ε::Real, max_it::Int)
     yy[1] = xn
     k = 1
 
-    # try
+    try
         while norm(fx) > ε && k < max_it
             step!(fi)
             xn, fx = get_state(fi)
             k += 1
             yy[k] = xn
         end
-    # catch e
-    #     @warn "Iteration failed at step $k: $e"
-    #     @show xn
-    #     return max_it, yy
-    # end
+    catch e
+        @warn "Iteration failed at step $k: $e"
+        @show xn
+        return max_it, yy
+    end
     return k, yy
 end
 
@@ -199,8 +199,8 @@ end
 # Generalized Steffensen method for R^d → R
 function _steffenson_map(f::Function, g::Function, d)
     function construct_gradient(f, g, d, S::State)
-        J = zeros(eltype(x), d)
         fx = S.fx; Jx = S.dfx; x = S.x
+        J = zeros(eltype(x), d)
         gx = [g(fx, Jx[k]) for k in 1:d] 
         G = zeros(eltype(x), d)
         for  k in 1:d
